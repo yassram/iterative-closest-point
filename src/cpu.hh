@@ -16,16 +16,16 @@ namespace CPU
               m{m_},
               p{p_},
               new_p{p_},
-              np{p_.shape(1)},
-              nm{m_.shape(1)},
-              dim{p_.dimension()}
+              np{(unsigned int)p_.shape(1)},
+              nm{(unsigned int)m_.shape(1)},
+              dim{(unsigned int)p_.dimension()}
         {
         }
 
         ~ICP();
 
-        void find_alignment();
-        double ICP::find_alignment(xt::xarray<double> y);
+        void find_corresponding();
+        double find_alignment(xt::xarray<double> y);
 
         //Getter & Setter
         inline double getS() { return s; }
@@ -65,7 +65,7 @@ namespace CPU
         unsigned int nm;
         unsigned int dim;
 
-        constexpr int max_iter = 200;
-        constexpr double threshold = 1e-5;
+        const int max_iter = 200;
+        const double threshold = 1e-5;
     };
 } // namespace CPU
