@@ -16,7 +16,7 @@ set(SRCS
     )
 
 set(HEADERS
-    # src/cpu.hh
+    # src/cpu.hhcd 
     )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../)

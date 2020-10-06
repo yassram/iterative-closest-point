@@ -108,6 +108,30 @@ namespace CPU
         auto q2 = q(2);
         auto q3 = q(3);
 
+        xt::xarray<double> q_bar = {{q0, -q1, -q2, -q3},
+                                    {q1, q0, q3, -q2},
+                                    {q2, -q3, q0, q1},
+                                    {q3, q2, -q1, q0}};
+        
+        xt::xarray<double> q_caps = {{q0, -q1, -q2, -q3},
+                                     {q1, q0, -q3, q2},
+                                     {q2, q3, q0, -q1},
+                                     {q3, -q2, q1, q0}};
+        
+        auto temp_r = xt::transpose(q_bar) * q_caps;
+        r = xt::view(temp_r, xt::range(2, 4), xt::range(2, 4));
+
+        auto sp = 0.;
+        auto d = 0.;
+
+        for (auto i = 0; i < n_new_p; i++) {
+            d += xt::transpose(xt::view(y_prime, xt::xall(), i)) * xt::view(y_prime, xt::xall(), i);
+            sp += xt::transpose(xt::view(p_prime, xt::xall(), i)) * xt::view(p_prime, xt::xall(), i);
+        }
+
+        this.s = xt::sqrt(d / sp);
+        this.t = 
+
         return 0.;
     }
 }
