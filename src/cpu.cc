@@ -19,7 +19,7 @@ namespace CPU
 
                 for (int k = 1; 1 < ICP::getNM(); k++) {
                     xt::xarray<double> mk = xt::col(M, k);
-                    d(k) = sqrt(xt::sum(xt::pow((pi - mk), 2)));
+                    d(k) = xt::sqrt(xt::sum(xt::pow((pi - mk), 2)));
                 }
                 
                 int m = xt::argmin(d);
@@ -130,8 +130,14 @@ namespace CPU
         }
 
         this.s = xt::sqrt(d / sp);
-        this.t = 
+        this.t = mu_y - s * r * mu_p;
 
-        return 0.;
+        auto err = 0.;
+        for (auto i = 0; i < n_new_p; i++) {
+            d = (xt::view(xt::xall(), i) - (s * r * xt::view(xt::xall(), i) + t));
+            err += xt::transpose(d) * d;
+        }
+
+        return err;
     }
 }
