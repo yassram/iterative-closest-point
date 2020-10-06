@@ -4,3 +4,7 @@
 *.ptx
 *.cubin
 *.fatbin
+.vscode
+build
+data
+icp

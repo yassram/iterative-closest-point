@@ -1,0 +1,6 @@
+[requires]
+xtensor/0.21.5
+openblas/0.3.10
+
+[generators]
+cmake
