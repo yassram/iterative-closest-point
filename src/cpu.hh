@@ -1,50 +1,50 @@
 #pragma once
-#include "xtensor/xarray.hpp"
-#include "xtensor/xio.hpp"
-#include "xtensor/xview.hpp"
+#include <Eigen/Core>
+
+using Eigen::MatrixXd;
 
 namespace CPU
 {
     class ICP
     {
     public:
-        ICP(double s_, xt::xarray<double> t_, xt::xarray<double> r_,
-            xt::xarray<double> m_, xt::xarray<double> p_)
+        ICP(double s_, MatrixXd t_, MatrixXd r_,
+            MatrixXd m_, MatrixXd p_)
             : s{s_},
               t{t_},
               r{r_},
               m{m_},
               p{p_},
               new_p{p_},
-              np{(unsigned int)p_.shape(1)},
-              nm{(unsigned int)m_.shape(1)},
-              dim{(unsigned int)p_.dimension()}
+              np{(unsigned int)p_.cols()},
+              nm{(unsigned int)m_.cols()},
+              dim{(unsigned int)p_.rows()}
         {
         }
 
         ~ICP();
 
         void find_corresponding();
-        double find_alignment(xt::xarray<double> y);
+        double find_alignment(MatrixXd y);
 
         //Getter & Setter
         inline double getS() { return s; }
         inline void setS(double s_) { s = s_; }
 
-        inline xt::xarray<double> getR() { return r; }
-        inline void setR(xt::xarray<double> r_) { r = r_; }
+        inline MatrixXd getR() { return r; }
+        inline void setR(MatrixXd r_) { r = r_; }
 
-        inline xt::xarray<double> getT() { return t; }
-        inline void setT(xt::xarray<double> t_) { t = t_; }
+        inline MatrixXd getT() { return t; }
+        inline void setT(MatrixXd t_) { t = t_; }
 
-        inline xt::xarray<double> getP() { return p; }
-        inline void setP(xt::xarray<double> p_) { p = p_; }
+        inline MatrixXd getP() { return p; }
+        inline void setP(MatrixXd p_) { p = p_; }
 
-        inline xt::xarray<double> getM() { return t; }
-        inline void setM(xt::xarray<double> m_) { m = m_; }
+        inline MatrixXd getM() { return t; }
+        inline void setM(MatrixXd m_) { m = m_; }
 
-        inline xt::xarray<double> getNewP() { return new_p; }
-        inline void setNewP(xt::xarray<double> new_p_) { new_p = new_p_; }
+        inline MatrixXd getNewP() { return new_p; }
+        inline void setNewP(MatrixXd new_p_) { new_p = new_p_; }
 
         inline int getMaxIter() { return max_iter; }
         inline double getThreshold() { return threshold; }
@@ -54,12 +54,12 @@ namespace CPU
 
     private:
         double s;
-        xt::xarray<double> t;
-        xt::xarray<double> r;
+        MatrixXd t;
+        MatrixXd r;
 
-        xt::xarray<double> m;
-        xt::xarray<double> p;
-        xt::xarray<double> new_p;
+        MatrixXd m;
+        MatrixXd p;
+        MatrixXd new_p;
 
         unsigned int np;
         unsigned int nm;

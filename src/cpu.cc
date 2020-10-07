@@ -6,19 +6,19 @@
 namespace CPU
 {
     void ICP::find_corresponding() {
-        xt::xarray<double> new_p = ICP::getNewP();
-        xt::xarray<double> M = ICP::getM();
+        MatrixXd new_p = ICP::getNewP();
+        MatrixXd M = ICP::getM();
 
         for (int i = 1; i < ICP::getMaxIter(); i++) {
-            xt::xarray<double> Y = xt::zeros<int>({ICP::getDim(), ICP::getNP()});
+            MatrixXd Y = xt::zeros<int>({ICP::getDim(), ICP::getNP()});
             for (int j = 1; j <= ICP::getNP(); j++) {
 
-                xt::xarray<double> pi = xt::col(new_p, j);
-                xt::xarray<double> d = xt::zeros<int>({1, ICP::getNM()});
+                MatrixXd pi = xt::col(new_p, j);
+                MatrixXd d = xt::zeros<int>({1, ICP::getNM()});
                 
 
                 for (int k = 1; 1 < ICP::getNM(); k++) {
-                    xt::xarray<double> mk = xt::col(M, k);
+                    MatrixXd mk = xt::col(M, k);
                     d(k) = xt::sqrt(xt::sum(xt::pow((pi - mk), 2)));
                 }
                 
@@ -32,11 +32,11 @@ namespace CPU
             //ICP::setY(Y);
 
             double s = ICP::getS();
-            xt::xarray<double> t = ICP::getT();
-            xt::xarray<double> r = ICP::getR();
+            MatrixXd t = ICP::getT();
+            MatrixXd r = ICP::getR();
             for (int j = 1; j < ICP::getNP(); j++) {
                 xt::col(new_p, j) = s * r * xt::col(new_p, j) + t;
-                xt::xarray<double> e = xt::col(Y, j) - xt::col(new_p, j);
+                MatrixXd e = xt::col(Y, j) - xt::col(new_p, j);
                 err += xt::transpose(e) * e;
             }
             
@@ -49,7 +49,7 @@ namespace CPU
 
     }
     
-    double ICP::find_alignment(xt::xarray<double> y)
+    double ICP::find_alignment(MatrixXd y)
     {
         dim_new_p = this.new_p.dimension();
         n_new_p = this.new_p.shape(1);
@@ -94,7 +94,7 @@ namespace CPU
         szy = xt::sum(pz * yy);
         szz = xt::sum(pz * yz);
 
-        xt::xarray<double> n_matrix = {{sxx + syy + szz, syz - szy, -sxz + szx, sxy - syx},
+        MatrixXd n_matrix = {{sxx + syy + szz, syz - szy, -sxz + szx, sxy - syx},
                                        {-szy + syz, sxx - szz - syy, sxy + syx, sxz + szx},
                                        {szx - sxz, syx + sxy, syy - szz - sxx, syz + szy},
                                        {-syx + sxy, szx + sxz, szy + syz, szz - syy - sxx}};
@@ -108,12 +108,12 @@ namespace CPU
         auto q2 = q(2);
         auto q3 = q(3);
 
-        xt::xarray<double> q_bar = {{q0, -q1, -q2, -q3},
+        MatrixXd q_bar = {{q0, -q1, -q2, -q3},
                                     {q1, q0, q3, -q2},
                                     {q2, -q3, q0, q1},
                                     {q3, q2, -q1, q0}};
         
-        xt::xarray<double> q_caps = {{q0, -q1, -q2, -q3},
+        MatrixXd q_caps = {{q0, -q1, -q2, -q3},
                                      {q1, q0, -q3, q2},
                                      {q2, q3, q0, -q1},
                                      {q3, -q2, q1, q0}};
