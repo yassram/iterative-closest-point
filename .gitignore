@@ -8,4 +8,6 @@
 build
 data
 icp
+icp-gpu
+icp-cpu
 *~

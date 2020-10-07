@@ -11,15 +11,26 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
 set(SRCS
-    src/main.cc
-   src/cpu.cc
-    )
+	src/main.cc
+	src/cpu.cc
+)
 
 set(HEADERS
-  src/cpu.hh
-    )
+	src/cpu.hh
+)
+
+set(SRCS_GPU
+	src/GPU/main.cc
+)
+
+
+set(HEADERS_GPU
+	src/GPU/header.hh
+)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../)
 
 add_executable(icp ${SRCS} ${HEADERS})
+add_executable(icp-gpu ${SRCS_GPU} ${HEADERS_GPU})
+
 target_link_libraries(icp ${CONAN_LIBS})
