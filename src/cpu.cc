@@ -10,22 +10,28 @@ namespace CPU
         MatrixXd M = ICP::getM();
 
         for (int i = 1; i < ICP::getMaxIter(); i++) {
-            MatrixXd Y = xt::zeros<int>({ICP::getDim(), ICP::getNP()});
+            MatrixXd Y = MatrixXd::Zero(ICP::getDim(), ICP::getNP());
             for (int j = 1; j <= ICP::getNP(); j++) {
 
-                MatrixXd pi = xt::col(new_p, j);
-                MatrixXd d = xt::zeros<int>({1, ICP::getNM()});
-                
+                // MatrixXd pi = xt::col(new_p, j);
+                MatrixXd pi = new_p.col(j);
+                MatrixXd d = MatrixXd::Zero(1, ICP::getNM());                
 
                 for (int k = 1; 1 < ICP::getNM(); k++) {
-                    MatrixXd mk = xt::col(M, k);
-                    d(k) = xt::sqrt(xt::sum(xt::pow((pi - mk), 2)));
+                    MatrixXd mk = M.col(k);
+                    auto t1 = pi - mk;
+                    auto t2 = t1.array().pow(2).sum();
+                    d(k) = sqrt(t2);
+                    //d(k) = sqrt(xt::sum(xt::pow((pi - mk), 2)));
                 }
                 
-                int m = xt::argmin(d);
-                //double mind = d(m);
-
-                xt::col(Y, j) = xt::col(M,m);
+                // int m = xt::argmin(d);
+                MatrixXd::Index minRow, minCol;
+                int m = d.minCoeff(&minRow, &minCol);
+            
+                // Y(j) = M.col((double)(minCol));
+                Y.col(j) = M.col((double)minCol);
+                //xt::col(Y, j) = xt::col(M,m);
             }
             
             double err = ICP::find_alignment(Y);
@@ -35,9 +41,9 @@ namespace CPU
             MatrixXd t = ICP::getT();
             MatrixXd r = ICP::getR();
             for (int j = 1; j < ICP::getNP(); j++) {
-                xt::col(new_p, j) = s * r * xt::col(new_p, j) + t;
-                MatrixXd e = xt::col(Y, j) - xt::col(new_p, j);
-                err += xt::transpose(e) * e;
+                new_p.col(j) = s * r * new_p.col(j) + t;
+                MatrixXd e = Y.col(j) - new_p.col(j);
+                err = err + (e.transpose() * e)(0);
             }
             
             ICP::setNewP(new_p);
@@ -51,11 +57,11 @@ namespace CPU
     
     double ICP::find_alignment(MatrixXd y)
     {
-        dim_new_p = this.new_p.dimension();
-        n_new_p = this.new_p.shape(1);
+        auto dim_new_p = this->new_p.rows();
+        auto n_new_p = this->new_p.cols();
 
-        dim_y = y.dimension();
-        n_y = y.shape(1);
+        auto dim_y = y.rows();
+        auto n_y = y.cols();
 
         if (n_new_p != n_y) {
             std::cerr << "Point sets need to have the same number of points.\n";
@@ -71,73 +77,89 @@ namespace CPU
             std::cerr << "Need at least 4 point pairs\n";
         }
 
-        mu_p = xt::mean(new_p, 1);
-        mu_y = xt::mean(y, 1);
+        auto mu_p = this->new_p.rowwise().mean();
+        auto mu_y = y.rowwise().mean();
+
+        auto p_prime = this->new_p.colwise() - mu_p;
+        auto y_prime = y.colwise() - mu_y;
+
+        auto px = p_prime.row(1);
+        auto py = p_prime.row(2);
+        auto pz = p_prime.row(3);
         
-        p_prime = this.new_p - mu_p;
-        y_prime = y - mu_y;
-
-        px = xt::view(p_prime, 1, xt::xall());
-        py = xt::view(p_prime, 2, xt::xall());
-        pz = xt::view(p_prime, 3, xt::xall());
-        yx = xt::view(y_prime, 1, xt::xall());
-        yy = xt::view(y_prime, 2, xt::xall());
-        yz = xt::view(y_prime, 3, xt::xall());
-
-        sxx = xt::sum(px * yx);
-        sxy = xt::sum(px * yy);
-        sxz = xt::sum(px * yz);
-        syx = xt::sum(py * yx);
-        syy = xt::sum(py * yy);
-        syz = xt::sum(py * yz);
-        szx = xt::sum(pz * yx);
-        szy = xt::sum(pz * yy);
-        szz = xt::sum(pz * yz);
-
-        MatrixXd n_matrix = {{sxx + syy + szz, syz - szy, -sxz + szx, sxy - syx},
-                                       {-szy + syz, sxx - szz - syy, sxy + syx, sxz + szx},
-                                       {szx - sxz, syx + sxy, syy - szz - sxx, syz + szy},
-                                       {-syx + sxy, szx + sxz, szy + syz, szz - syy - sxx}};
+        auto yx = y_prime.row(1);
+        auto yy = y_prime.row(2);
+        auto yz = y_prime.row(3);
         
-        auto dv = xt::linalg::eig(n_matrix);
-        auto v = std::get<1>(dv);
+        auto sxx = (px.array() * yx.array()).sum();
+        auto sxy = (px.array() * yy.array()).sum();
+        auto sxz = (px.array() * yz.array()).sum();
+        auto syx = (py.array() * yx.array()).sum();
+        auto syy = (py.array() * yy.array()).sum();
+        auto syz = (py.array() * yz.array()).sum();
+        auto szx = (pz.array() * yx.array()).sum();
+        auto szy = (pz.array() * yy.array()).sum();
+        auto szz = (pz.array() * yz.array()).sum();
 
-        auto q = xt::view(v, xt::xall(), 4);
-        auto q0 = q(0);
-        auto q1 = q(1);
-        auto q2 = q(2);
-        auto q3 = q(3);
+        MatrixXd n_matrix{4, 4};
+        n_matrix << sxx + syy + szz, syz - szy, -1 * sxz + szx, sxy - syx,
+                    -1 * szy + syz, sxx - szz - syy, sxy + syx, sxz + szx,
+                    szx - sxz, syx + sxy, syy - szz - sxx, syz + szy,
+                    -1 * syx + sxy, szx + sxz, szy + syz, szz - syy - sxx;
 
-        MatrixXd q_bar = {{q0, -q1, -q2, -q3},
-                                    {q1, q0, q3, -q2},
-                                    {q2, -q3, q0, q1},
-                                    {q3, q2, -q1, q0}};
+        // auto dv = xt::linalg::eig(n_matrix);
+        // auto v = std::get<1>(dv);
+        Eigen::EigenSolver<MatrixXd> dv{n_matrix};
+        auto v = dv.eigenvectors();
+
+        // auto q = xt::view(v, xt::all(), 4);
+        auto q = v.col(4);
+        auto q0 = q(0).real();
+        auto q1 = q(1).real();
+        auto q2 = q(2).real();
+        auto q3 = q(3).real();
         
-        MatrixXd q_caps = {{q0, -q1, -q2, -q3},
-                                     {q1, q0, -q3, q2},
-                                     {q2, q3, q0, -q1},
-                                     {q3, -q2, q1, q0}};
+        MatrixXd q_bar{4, 4};
+        q_bar << q0, -1 * q1, -1 * q2, -1 * q3,
+                 q1, q0, q3, -1 * q2,
+                 q2, -1 * q3, q0, q1,
+                 q3, q2, -1 * q1, q0;
         
-        auto temp_r = xt::transpose(q_bar) * q_caps;
-        r = xt::view(temp_r, xt::range(2, 4), xt::range(2, 4));
+        MatrixXd q_caps{4, 4};
+        q_caps << q0, -1 * q1, -1 * q2, -1 * q3,
+                  q1, q0, -1 * q3, q2,
+                  q2, q3, q0, -1 * q1,
+                  q3, -1 * q2, q1, q0;
+
+        // xt::transpose(q_bar);
+        q_bar.transposeInPlace();
+        auto temp_r = q_bar * q_caps;
+        // this->r = xt::view(temp_r, xt::range(2, 4), xt::range(2, 4));
+        this->r = temp_r.block(2, 2, 2, 2);
 
         auto sp = 0.;
-        auto d = 0.;
+        auto d_caps = 0.;
 
         for (auto i = 0; i < n_new_p; i++) {
-            d += xt::transpose(xt::view(y_prime, xt::xall(), i)) * xt::view(y_prime, xt::xall(), i);
-            sp += xt::transpose(xt::view(p_prime, xt::xall(), i)) * xt::view(p_prime, xt::xall(), i);
+            // auto y_prime_view = xt::view(y_prime, xt::all(), i);
+            // auto p_prime_view = xt::view(p_prime, xt::all(), i);
+            auto y_prime_view = y_prime.col(i);
+            auto p_prime_view = p_prime.col(i);
+            d_caps = d_caps + (y_prime_view.transpose() * y_prime_view)(0);
+            sp = sp + (p_prime_view.transpose() * p_prime_view)(0);
         }
 
-        this.s = xt::sqrt(d / sp);
-        this.t = mu_y - s * r * mu_p;
+        this->s = sqrt(d_caps / sp);
+        this->t = mu_y - s * r * mu_p;
 
         auto err = 0.;
         for (auto i = 0; i < n_new_p; i++) {
-            d = (xt::view(xt::xall(), i) - (s * r * xt::view(xt::xall(), i) + t));
-            err += xt::transpose(d) * d;
+            // auto d = (xt::view(y, xt::all(), i) - (this->s * this->r * xt::view(this->new_p, xt::all(), i) + t));
+            auto d = y.col(i) - (this->s * this->r * this->new_p.col(i) + t);
+            err += (d.transpose() * d)(0);
         }
 
         return err;
     }
+
 }

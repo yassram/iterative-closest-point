@@ -12,11 +12,11 @@ conan_basic_setup()
 
 set(SRCS
     src/main.cc
-    src/cpu.cc
+   src/cpu.cc
     )
 
 set(HEADERS
-    src/cpu.hh
+  src/cpu.hh
     )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../)

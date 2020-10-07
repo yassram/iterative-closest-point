@@ -1,7 +1,9 @@
 #pragma once
 #include <Eigen/Core>
+#include <Eigen/Eigenvalues>
 
 using Eigen::MatrixXd;
+using Eigen::ArrayXd;
 
 namespace CPU
 {
