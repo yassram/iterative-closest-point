@@ -1,4 +1,6 @@
 #include <iostream>
+#include "cpu.hh"
+#include "load.hh"
 // #include "xtensor/xarray.hpp"
 // #include "xtensor/xio.hpp"
 // #include "xtensor/xview.hpp"
@@ -22,7 +24,8 @@ int main(int argc, char* argv[])
     // auto d = xt::linalg::det(a);
     // std::cout << d << std::endl;  // 6.661338e-16
 
-    std::cout << "hello\n"; 
+    std::cout << "hello\n";
+    load_matrix("./data_students/cow_ref.txt");
 
     return 0;
 }
