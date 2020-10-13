@@ -13,11 +13,11 @@ conan_basic_setup()
 set(SRCS
 	src/main.cc
         src/load.cc
-        #src/cpu.cc
+        src/cpu.cc
 )
 
 set(HEADERS
-    #src/cpu.hh
+        src/cpu.hh
 )
 
 set(SRCS_GPU

@@ -32,5 +32,5 @@ MatrixXd load_matrix(const char *filename)
         matrix.row(i) << vect[0], vect[1], vect[2];
     }
 
-    return matrix;
+    return matrix.transpose();
 }

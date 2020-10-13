@@ -24,7 +24,8 @@ namespace CPU
             this->t = MatrixXd::Zero(m_.rows(), 1);
         }
 
-        ~ICP();
+        ~ICP()
+        {}
 
         void find_corresponding();
         double find_alignment(MatrixXd y);
