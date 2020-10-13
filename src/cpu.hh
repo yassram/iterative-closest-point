@@ -11,18 +11,17 @@ namespace CPU
     class ICP
     {
     public:
-        ICP(double s_, MatrixXd t_, MatrixXd r_,
-            MatrixXd m_, MatrixXd p_)
-            : s{s_},
-              t{t_},
-              r{r_},
-              m{m_},
+        ICP(MatrixXd m_, MatrixXd p_)
+            : m{m_},
               p{p_},
               new_p{p_},
               np{(unsigned int)p_.cols()},
               nm{(unsigned int)m_.cols()},
               dim{(unsigned int)p_.rows()}
         {
+            this->s = 1.;
+            this->r = MatrixXd::Identity(m_.rows(), m_.rows());
+            this->t = MatrixXd::Zero(m_.rows(), 1);
         }
 
         ~ICP();
