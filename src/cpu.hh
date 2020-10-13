@@ -43,7 +43,7 @@ namespace CPU
         inline MatrixXd getP() { return p; }
         inline void setP(MatrixXd p_) { p = p_; }
 
-        inline MatrixXd getM() { return t; }
+        inline MatrixXd getM() { return m; }
         inline void setM(MatrixXd m_) { m = m_; }
 
         inline MatrixXd getNewP() { return new_p; }

@@ -11,13 +11,13 @@ namespace CPU
 
         for (int i = 1; i < ICP::getMaxIter(); i++) {
             MatrixXd Y = MatrixXd::Zero(ICP::getDim(), ICP::getNP());
-            for (int j = 1; j <= ICP::getNP(); j++) {
+            for (int j = 0; j < ICP::getNP(); j++) {
 
                 // MatrixXd pi = xt::col(new_p, j);
                 MatrixXd pi = new_p.col(j);
                 MatrixXd d = MatrixXd::Zero(1, ICP::getNM());                
 
-                for (int k = 1; 1 < ICP::getNM(); k++) {
+                for (int k = 0; k < ICP::getNM(); k++) {
                     MatrixXd mk = M.col(k);
                     auto t1 = pi - mk;
                     auto t2 = t1.array().pow(2).sum();
@@ -40,7 +40,7 @@ namespace CPU
             double s = ICP::getS();
             MatrixXd t = ICP::getT();
             MatrixXd r = ICP::getR();
-            for (int j = 1; j < ICP::getNP(); j++) {
+            for (int j = 0; j < ICP::getNP(); j++) {
                 new_p.col(j) = s * r * new_p.col(j) + t;
                 MatrixXd e = Y.col(j) - new_p.col(j);
                 err = err + (e.transpose() * e)(0);
@@ -80,16 +80,16 @@ namespace CPU
         auto mu_p = this->new_p.rowwise().mean();
         auto mu_y = y.rowwise().mean();
 
-        auto p_prime = this->new_p.colwise() - mu_p;
-        auto y_prime = y.colwise() - mu_y;
+        MatrixXd p_prime = this->new_p.colwise() - mu_p;
+        MatrixXd y_prime = y.colwise() - mu_y;
 
-        auto px = p_prime.row(1);
-        auto py = p_prime.row(2);
-        auto pz = p_prime.row(3);
+        auto px = p_prime.row(0);
+        auto py = p_prime.row(1);
+        auto pz = p_prime.row(2);
         
-        auto yx = y_prime.row(1);
-        auto yy = y_prime.row(2);
-        auto yz = y_prime.row(3);
+        auto yx = y_prime.row(0);
+        auto yy = y_prime.row(1);
+        auto yz = y_prime.row(2);
         
         auto sxx = (px.array() * yx.array()).sum();
         auto sxy = (px.array() * yy.array()).sum();
@@ -113,7 +113,7 @@ namespace CPU
         auto v = dv.eigenvectors();
 
         // auto q = xt::view(v, xt::all(), 4);
-        auto q = v.col(4);
+        auto q = v.col(3);
         auto q0 = q(0).real();
         auto q1 = q(1).real();
         auto q2 = q(2).real();
@@ -135,7 +135,7 @@ namespace CPU
         q_bar.transposeInPlace();
         auto temp_r = q_bar * q_caps;
         // this->r = xt::view(temp_r, xt::range(2, 4), xt::range(2, 4));
-        this->r = temp_r.block(2, 2, 2, 2);
+        this->r = temp_r.block(1, 1, 3, 3);
 
         auto sp = 0.;
         auto d_caps = 0.;
