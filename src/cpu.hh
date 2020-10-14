@@ -5,6 +5,7 @@
 using Eigen::MatrixXd;
 using Eigen::ArrayXd;
 using Eigen::Vector3d;
+using Eigen::MatrixXcd;
 
 namespace CPU
 {
