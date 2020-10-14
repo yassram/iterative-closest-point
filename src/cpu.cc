@@ -10,6 +10,7 @@ namespace CPU
         MatrixXd M = ICP::getM();
 
         for (int i = 1; i < ICP::getMaxIter(); i++) {
+            std::cerr << "[ICP] iteration number " << i << std::endl;
             MatrixXd Y = MatrixXd::Zero(ICP::getDim(), ICP::getNP());
             for (int j = 0; j < ICP::getNP(); j++) {
 

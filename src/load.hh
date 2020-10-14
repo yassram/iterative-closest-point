@@ -7,3 +7,4 @@
 #include "cpu.hh"
 
 MatrixXd load_matrix(const char *filename);
+void write_matrix(MatrixXd matrix);

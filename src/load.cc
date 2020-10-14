@@ -34,3 +34,18 @@ MatrixXd load_matrix(const char *filename)
 
     return matrix.transpose();
 }
+
+//matrix 3,n du coup
+void write_matrix(MatrixXd matrix)
+{
+    auto matrix_t = matrix.transpose();
+    std::ofstream output;
+    output.open("output.txt");
+    output << "Points_0,Points_1,Points_2" << std::endl;
+    for (int i = 0; i < matrix_t.rows(); i++) {
+        output << matrix_t.row(i)(0) << ','
+               << matrix_t.row(i)(1) << ','
+               << matrix_t.row(i)(2) << std::endl;
+    }
+    output.close();
+}
