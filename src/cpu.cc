@@ -6,49 +6,55 @@
 namespace CPU
 {
     void ICP::find_corresponding() {
-        MatrixXd new_p = ICP::getNewP();
-        MatrixXd M = ICP::getM();
 
-        for (int i = 1; i < ICP::getMaxIter(); i++) {
-            std::cerr << "[ICP] iteration number " << i << std::endl;
-            MatrixXd Y = MatrixXd::Zero(ICP::getDim(), ICP::getNP());
-            for (int j = 0; j < ICP::getNP(); j++) {
+        for (int i = 0; i < this->max_iter; i++) {
+            std::cerr << "[ICP] iteration number " << i << " | ";
 
-                MatrixXd pi = new_p.col(j);
-                MatrixXd d = MatrixXd::Zero(1, ICP::getNM());
+	    MatrixXd Y = MatrixXd::Zero(this->dim, this->np);
+            for (int j = 0; j < this->np; j++) {
 
-                for (int k = 0; k < ICP::getNM(); k++) {
-                    MatrixXd mk = M.col(k);
+                MatrixXd pi = this->new_p.col(j);
+                MatrixXd d = MatrixXd::Zero(1, this->nm);
+
+                for (int k = 0; k < this->nm; k++) {
+                    MatrixXd mk = this->m.col(k);
                     auto t1 = pi - mk;
                     auto t2 = t1.array().pow(2).sum();
                     d(k) = sqrt(t2);
                 }
-
                 MatrixXd::Index minRow, minCol;
                 int m = d.minCoeff(&minRow, &minCol);
 
-                Y.col(j) = M.col((double)minCol);
+                Y.col(j) = this->m.col((int)minCol);
             }
             double err = ICP::find_alignment(Y);
 
-            double s = ICP::getS();
-            MatrixXd t = ICP::getT();
-            MatrixXd r = ICP::getR();
-            for (int j = 0; j < ICP::getNP(); j++) {
-                new_p.col(j) = s * r * new_p.col(j) + t;
-                MatrixXd e = Y.col(j) - new_p.col(j);
+            for (int j = 0; j < this->np; j++) {
+                this->new_p.col(j) = (this->s * this->r) * this->new_p.col(j) + this->t;
+
+                MatrixXd e = Y.col(j) - this->new_p.col(j);
                 err = err + (e.transpose() * e)(0);
             }
 
-            ICP::setNewP(new_p);
-            err /= ICP::getNP();
+            err /= this->np;
+            std::cerr << "err = " << err << std::endl;
 
-            if (err < ICP::getThreshold())
+            if (err < this->threshold)
                 break;
         }
 
     }
 
+int max_element_index(Eigen::EigenSolver<Eigen::MatrixXd>::EigenvalueType& eigen_value)
+    {
+        int index = 0;
+        double max = real(eigen_value(0));
+        for (int i = 1; i < 4; i++) {
+            if (real(eigen_value(i)) > max)
+                index = i;
+        }
+        return index;
+    }
     double ICP::find_alignment(MatrixXd y)
     {
         auto dim_new_p = this->new_p.rows();
@@ -101,14 +107,24 @@ namespace CPU
                     szx - sxz, syx + sxy, syy - szz - sxx, syz + szy,
                     -1 * syx + sxy, szx + sxz, szy + syz, szz - syy - sxx;
 
-        Eigen::EigenSolver<MatrixXd> dv{n_matrix};
-        auto v = dv.eigenvectors();
+        // Eigen::EigenSolver<MatrixXd> dv{n_matrix};
+        // auto v = dv.eigenvectors();
 
-        auto q = v.col(3);
-        auto q0 = q(0);
-        auto q1 = q(1);
-        auto q2 = q(2);
-        auto q3 = q(3);
+	Eigen::EigenSolver<MatrixXd> eigen_solver(n_matrix);
+        auto eigen_values = eigen_solver.eigenvalues();
+        auto eigen_vectors = eigen_solver.eigenvectors();
+        auto max_eigen_value_index = max_element_index(eigen_values);
+
+        double q0 = real(eigen_vectors(0, max_eigen_value_index));
+        double q1 = real(eigen_vectors(1, max_eigen_value_index));
+        double q2 = real(eigen_vectors(2, max_eigen_value_index));
+        double q3 = real(eigen_vectors(3, max_eigen_value_index));
+
+        // auto q = v.col(3);
+        // auto q0 = q(0);
+        // auto q1 = q(1);
+        // auto q2 = q(2);
+        // auto q3 = q(3);
 
         MatrixXcd q_bar{4, 4};
         q_bar << q0, -1. * q1, -1. * q2, -1. * q3,
@@ -137,11 +153,11 @@ namespace CPU
         }
 
         this->s = sqrt(d_caps / sp);
-        this->t = mu_y - s * r * mu_p;
+        this->t = mu_y - this->s * r * mu_p;
 
         auto err = 0.;
         for (auto i = 0; i < n_new_p; i++) {
-            auto d = y.col(i) - (this->s * this->r * this->new_p.col(i) + t);
+            auto d = y.col(i) - ((this->s * this->r) * this->new_p.col(i) + this->t);
             err += (d.transpose() * d)(0);
         }
 

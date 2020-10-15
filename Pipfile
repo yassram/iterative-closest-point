@@ -7,6 +7,11 @@ verify_ssl = true
 
 [packages]
 conan = "*"
+jupyter = "*"
+matplotlib = "*"
+numpy = "*"
+pandas = "*"
+ipyml = "*"
 
 [requires]
 python_version = "3.6"
