@@ -42,5 +42,5 @@ cd ..
 
 Run the project:
 ```bash
-./icp [...]
+./icp [path_to_ref_cloud] [path_to_transform_cloud] [nb_iter]
 ```
