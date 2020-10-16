@@ -10,7 +10,7 @@ namespace CPU
         for (int i = 0; i < this->max_iter; i++) {
             std::cerr << "[ICP] iteration number " << i << " | ";
 
-	    MatrixXd Y = MatrixXd::Zero(this->dim, this->np);
+	        MatrixXd Y = MatrixXd::Zero(this->dim, this->np);
             for (int j = 0; j < this->np; j++) {
 
                 MatrixXd pi = this->new_p.col(j);
@@ -45,7 +45,7 @@ namespace CPU
 
     }
 
-int max_element_index(Eigen::EigenSolver<Eigen::MatrixXd>::EigenvalueType& eigen_value)
+    int max_element_index(Eigen::EigenSolver<Eigen::MatrixXd>::EigenvalueType& eigen_value)
     {
         int index = 0;
         double max = real(eigen_value(0));
@@ -55,6 +55,7 @@ int max_element_index(Eigen::EigenSolver<Eigen::MatrixXd>::EigenvalueType& eigen
         }
         return index;
     }
+
     double ICP::find_alignment(MatrixXd y)
     {
         auto dim_new_p = this->new_p.rows();
@@ -107,8 +108,6 @@ int max_element_index(Eigen::EigenSolver<Eigen::MatrixXd>::EigenvalueType& eigen
                     szx - sxz, syx + sxy, syy - szz - sxx, syz + szy,
                     -1 * syx + sxy, szx + sxz, szy + syz, szz - syy - sxx;
 
-        // Eigen::EigenSolver<MatrixXd> dv{n_matrix};
-        // auto v = dv.eigenvectors();
 
 	Eigen::EigenSolver<MatrixXd> eigen_solver(n_matrix);
         auto eigen_values = eigen_solver.eigenvalues();
@@ -120,19 +119,13 @@ int max_element_index(Eigen::EigenSolver<Eigen::MatrixXd>::EigenvalueType& eigen
         double q2 = real(eigen_vectors(2, max_eigen_value_index));
         double q3 = real(eigen_vectors(3, max_eigen_value_index));
 
-        // auto q = v.col(3);
-        // auto q0 = q(0);
-        // auto q1 = q(1);
-        // auto q2 = q(2);
-        // auto q3 = q(3);
-
-        MatrixXcd q_bar{4, 4};
+        MatrixXd q_bar{4, 4};
         q_bar << q0, -1. * q1, -1. * q2, -1. * q3,
                  q1, q0, q3, -1. * q2,
                  q2, -1. * q3, q0, q1,
                  q3, q2, -1. * q1, q0;
 
-        MatrixXcd q_caps{4, 4};
+        MatrixXd q_caps{4, 4};
         q_caps << q0, -1. * q1, -1. * q2, -1. * q3,
                   q1, q0, -1. * q3, q2,
                   q2, q3, q0, -1. * q1,
@@ -140,7 +133,7 @@ int max_element_index(Eigen::EigenSolver<Eigen::MatrixXd>::EigenvalueType& eigen
 
         MatrixXd temp_r = (q_bar.conjugate().transpose() * q_caps).real();
 
-	this->r = temp_r.block(1, 1, 3, 3);
+	    this->r = temp_r.block(1, 1, 3, 3);
 
         auto sp = 0.;
         auto d_caps = 0.;
