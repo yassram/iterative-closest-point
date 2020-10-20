@@ -10,7 +10,7 @@ namespace CPU
         for (int i = 0; i < this->max_iter; i++) {
             std::cerr << "[ICP] iteration number " << i << " | ";
 
-	        MatrixXd Y = MatrixXd::Zero(this->dim, this->np);
+            MatrixXd Y = MatrixXd::Zero(this->dim, this->np);
             for (int j = 0; j < this->np; j++) {
 
                 MatrixXd pi = this->new_p.col(j);
@@ -104,12 +104,12 @@ namespace CPU
 
         MatrixXd n_matrix{4, 4};
         n_matrix << sxx + syy + szz, syz - szy, -1 * sxz + szx, sxy - syx,
-                    -1 * szy + syz, sxx - szz - syy, sxy + syx, sxz + szx,
-                    szx - sxz, syx + sxy, syy - szz - sxx, syz + szy,
-                    -1 * syx + sxy, szx + sxz, szy + syz, szz - syy - sxx;
+            -1 * szy + syz, sxx - szz - syy, sxy + syx, sxz + szx,
+            szx - sxz, syx + sxy, syy - szz - sxx, syz + szy,
+            -1 * syx + sxy, szx + sxz, szy + syz, szz - syy - sxx;
 
 
-	Eigen::EigenSolver<MatrixXd> eigen_solver(n_matrix);
+        Eigen::EigenSolver<MatrixXd> eigen_solver(n_matrix);
         auto eigen_values = eigen_solver.eigenvalues();
         auto eigen_vectors = eigen_solver.eigenvectors();
         auto max_eigen_value_index = max_element_index(eigen_values);
@@ -121,19 +121,19 @@ namespace CPU
 
         MatrixXd q_bar{4, 4};
         q_bar << q0, -1. * q1, -1. * q2, -1. * q3,
-                 q1, q0, q3, -1. * q2,
-                 q2, -1. * q3, q0, q1,
-                 q3, q2, -1. * q1, q0;
+            q1, q0, q3, -1. * q2,
+            q2, -1. * q3, q0, q1,
+            q3, q2, -1. * q1, q0;
 
         MatrixXd q_caps{4, 4};
         q_caps << q0, -1. * q1, -1. * q2, -1. * q3,
-                  q1, q0, -1. * q3, q2,
-                  q2, q3, q0, -1. * q1,
-                  q3, -1. * q2, q1, q0;
+            q1, q0, -1. * q3, q2,
+            q2, q3, q0, -1. * q1,
+            q3, -1. * q2, q1, q0;
 
         MatrixXd temp_r = (q_bar.conjugate().transpose() * q_caps).real();
 
-	    this->r = temp_r.block(1, 1, 3, 3);
+        this->r = temp_r.block(1, 1, 3, 3);
 
         auto sp = 0.;
         auto d_caps = 0.;
