@@ -1,3 +1,4 @@
 #pragma once
 #include <iostream>
-#include "compute.hh"
+
+__global__ void test()
