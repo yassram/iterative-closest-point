@@ -1,4 +1,7 @@
 #pragma once
 #include <iostream>
+#include <cstdio>
+#include <cstdlib>
+#include "gpu.hh"
 
-void call_test();
+namespace GPU {}

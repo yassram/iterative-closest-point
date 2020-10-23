@@ -17,6 +17,8 @@ set(CMAKE_CXX_FLAGS "-std=c++17")
 set(CMAKE_CXX_FLAGS_DEBUG "-g3 -Werror")
 set(CMAKE_CXX_FLAGS_RELEASE "-Os")
 
+find_package(CUDA REQUIRED)
+
 cmake_policy(SET CMP0104 OLD)
 
 set(SRCS
@@ -33,11 +35,15 @@ set(HEADERS
 
 set(SRCS_GPU
     src/GPU/main.cc
+    src/GPU/gpu.cc
+    src/load.cc
 )
 
 
 set(HEADERS_GPU
-    src/GPU/header.hh
+    src/load.hh
+    src/GPU/compute.hh
+    src/GPU/gpu.hh
 )
 
 set(SRCS_GPU_CUDA
@@ -47,20 +53,21 @@ set(SRCS_GPU_CUDA
 
 set(HEADERS_GPU_CUDA
     src/GPU/compute.hh
+    src/GPU/gpu.hh
 )
 
 
 add_library(compute)
 target_compile_features(compute PUBLIC cxx_std_14)
-target_sources(compute PRIVATE ${SRCS_GPU_CUDA} ${HEADERS_GPU_CUDA})
+target_sources(compute PRIVATE ${SRCS_GPU} ${HEADERS_GPU})
 set_target_properties(compute PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-
+target_link_libraries(compute Eigen3::Eigen)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../)
 
 # CPU
-add_executable(icp ${SRCS} ${HEADERS})
-target_link_libraries (icp Eigen3::Eigen)
+#add_executable(icp ${SRCS} ${HEADERS})
+#target_link_libraries(icp Eigen3::Eigen)
 
 # GPU
-add_executable(icp-gpu ${SRCS_GPU} ${HEADERS_GPU})
-target_link_libraries(icp-gpu compute)
+add_executable(icp-gpu ${SRCS_GPU_CUDA} ${HEADERS_GPU_CUDA})
+target_link_libraries(icp-gpu PRIVATE compute Eigen3::Eigen)

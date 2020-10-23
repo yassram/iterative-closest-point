@@ -1,6 +1,5 @@
 #! /bin/sh
 
 cd build
-cmake ..
-make
+make -B
 cd ..

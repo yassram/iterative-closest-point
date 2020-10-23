@@ -1,39 +1,26 @@
-#include "cpu.hh"
+#include "gpu.hh"
 #include <cmath>
 #include <iostream>
 
-
-namespace CPU
+namespace GPU
 {
     void ICP::find_corresponding() {
 
         for (int i = 0; i < this->max_iter; i++) {
             std::cerr << "[ICP] iteration number " << i << " | ";
 
-            MatrixXd Y = MatrixXd::Zero(this->dim, this->np);
+            Matrix Y{Matrix::Zero(this->dim, this->np)};
             for (int j = 0; j < this->np; j++) {
-
-                MatrixXd pi = this->new_p.col(j);
-                MatrixXd d = MatrixXd::Zero(1, this->nm);
-
-                for (int k = 0; k < this->nm; k++) {
-                    MatrixXd mk = this->m.col(k);
-                    auto t1 = pi - mk;
-                    auto t2 = t1.array().pow(2).sum();
-                    d(k) = sqrt(t2);
-                }
-                MatrixXd::Index minRow, minCol;
-                int m = d.minCoeff(&minRow, &minCol);
-
-                std::cout << "minCol: " << (int)minCol << std::endl;
-                Y.col(j) = this->m.col((int)minCol);
+                Matrix pi {this->new_p.col(j)};
+                int minCol = compute_distance_w(this->m, pi);
+                Y.col(j) = this->m.col(minCol);
             }
             double err = ICP::find_alignment(Y);
 
             for (int j = 0; j < this->np; j++) {
                 this->new_p.col(j) = (this->s * this->r) * this->new_p.col(j) + this->t;
 
-                MatrixXd e = Y.col(j) - this->new_p.col(j);
+                Matrix e {Y.col(j) - this->new_p.col(j)};
                 err = err + (e.transpose() * e)(0);
             }
 
@@ -46,7 +33,7 @@ namespace CPU
 
     }
 
-    int max_element_index(Eigen::EigenSolver<Eigen::MatrixXd>::EigenvalueType& eigen_value)
+    int max_element_index(Eigen::EigenSolver<MatrixXd>::EigenvalueType& eigen_value)
     {
         int index = 0;
         double max = real(eigen_value(0));
@@ -57,7 +44,7 @@ namespace CPU
         return index;
     }
 
-    double ICP::find_alignment(MatrixXd y)
+    double ICP::find_alignment(Matrix y)
     {
         auto dim_new_p = this->new_p.rows();
         auto n_new_p = this->new_p.cols();
@@ -82,8 +69,8 @@ namespace CPU
         auto mu_p = this->new_p.rowwise().mean();
         auto mu_y = y.rowwise().mean();
 
-        MatrixXd p_prime = this->new_p.colwise() - mu_p;
-        MatrixXd y_prime = y.colwise() - mu_y;
+        Matrix p_prime = {this->new_p.colwise() - mu_p};
+        Matrix y_prime = {y.colwise() - mu_y};
 
         auto px = p_prime.row(0);
         auto py = p_prime.row(1);
@@ -103,7 +90,8 @@ namespace CPU
         auto szy = (pz.array() * yy.array()).sum();
         auto szz = (pz.array() * yz.array()).sum();
 
-        MatrixXd n_matrix{4, 4};
+        MatrixXd n_matrix {MatrixXd{4, 4}};
+
         n_matrix << sxx + syy + szz, syz - szy, -1 * sxz + szx, sxy - syx,
             -1 * szy + syz, sxx - szz - syy, sxy + syx, sxz + szx,
             szx - sxz, syx + sxy, syy - szz - sxx, syz + szy,
@@ -120,21 +108,21 @@ namespace CPU
         double q2 = real(eigen_vectors(2, max_eigen_value_index));
         double q3 = real(eigen_vectors(3, max_eigen_value_index));
 
-        MatrixXd q_bar{4, 4};
+        Matrix q_bar{MatrixXd{4, 4}};
         q_bar << q0, -1. * q1, -1. * q2, -1. * q3,
             q1, q0, q3, -1. * q2,
             q2, -1. * q3, q0, q1,
             q3, q2, -1. * q1, q0;
 
-        MatrixXd q_caps{4, 4};
+        MatrixXd q_caps{MatrixXd{4, 4}};
         q_caps << q0, -1. * q1, -1. * q2, -1. * q3,
             q1, q0, -1. * q3, q2,
             q2, q3, q0, -1. * q1,
             q3, -1. * q2, q1, q0;
 
-        MatrixXd temp_r = (q_bar.conjugate().transpose() * q_caps).real();
+        Matrix temp_r = {(q_bar.conjugate().transpose() * q_caps).real()};
 
-        this->r = temp_r.block(1, 1, 3, 3);
+        this->r = {temp_r.block(1, 1, 3, 3)};
 
         auto sp = 0.;
         auto d_caps = 0.;
@@ -147,7 +135,7 @@ namespace CPU
         }
 
         this->s = sqrt(d_caps / sp);
-        this->t = mu_y - this->s * r * mu_p;
+        this->t = {mu_y - this->s * r * mu_p};
 
         auto err = 0.;
         for (auto i = 0; i < n_new_p; i++) {
