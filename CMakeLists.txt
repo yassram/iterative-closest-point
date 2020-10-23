@@ -33,11 +33,13 @@ set(HEADERS
 
 set(SRCS_GPU
     src/GPU/main.cc
+    src/GPU/gpu.cc
 )
 
 
 set(HEADERS_GPU
     src/GPU/header.hh
+    src/GPU/gpu.hh
 )
 
 set(SRCS_GPU_CUDA
@@ -59,8 +61,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../)
 
 # CPU
 add_executable(icp ${SRCS} ${HEADERS})
-target_link_libraries (icp Eigen3::Eigen)
+target_link_libraries(icp Eigen3::Eigen)
 
 # GPU
 add_executable(icp-gpu ${SRCS_GPU} ${HEADERS_GPU})
-target_link_libraries(icp-gpu compute)
+target_link_libraries(icp-gpu compute Eigen3::Eigen)
