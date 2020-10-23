@@ -10,4 +10,5 @@ data
 icp
 icp-gpu
 icp-cpu
+bench
 *~
