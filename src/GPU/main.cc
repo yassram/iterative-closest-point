@@ -3,7 +3,7 @@
 #include "../load.hh"
 #include <complex>
 #include "gpu.hh"
-
+#include "compute.hh"
 void translate_overlap(double min_coord_ref[3], double max_coord_ref[3],
                        double min_coord_scene[3], double max_coord_scene[3])
 {
@@ -33,5 +33,6 @@ int main(int argc, char* argv[])
     icp.find_corresponding();
     write_matrix(icp.new_p);
 
+    call_test();
     return 0;
 }

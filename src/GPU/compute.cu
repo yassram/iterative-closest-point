@@ -2,30 +2,29 @@
 
 
 namespace GPU {
-
     void Matrix::fromGpu(double *gpu_rep, unsigned row, unsigned col) {
         MatrixXd tmp{row, col};
-        double data[row*col];
+        double h_d[row*col];
 
-        cudaMemcpy(data, gpu_rep, r*c*sizeof(double), cudaMemcpyDeviceToHost);
+        cudaMemcpy(h_d, gpu_rep, row*col*sizeof(double), cudaMemcpyDeviceToHost);
 
         for(unsigned i = 0; i < row; ++i)
             for (unsigned j = 0; j < col; ++j)
-                tmp(i,j) = data[col*i + j];
+                tmp(i,j) = h_d[col*i + j];
         Matrix new_matrix{tmp};
         *this = new_matrix;
     }
-
+    
     double *Matrix::toGpu() {
         unsigned r = this->rows();
         unsigned c = this->cols();
 
-        double *p;
-        cudaMalloc(&p, sizeof(double)*c*r;
-
-        double *data = this->data();
-        cudaMemcpy(p, data, r*c*sizeof(double), cudaMemcpyHostToDevice);
-        return p;
+        void *p = malloc(sizeof(double) * r*c);
+        
+        double *h_d = this->data();
+        std::cout << "---------->" << h_d[0] << h_d[1]  << h_d[2]  << h_d[3]  << std::endl;
+        cudaMemcpy(p, h_d, r*c*sizeof(double), cudaMemcpyHostToDevice);
+        return (double*)p;
     }
 }
 
@@ -34,13 +33,14 @@ __global__ void test() {
 }
 
 void call_test(){
-    GPU::Matrix a{MatrixXd{2,2}}
-    a << 1, 2 , 3, 4;
+    GPU::Matrix a{MatrixXd{2,2}};
+    a << 1, 2,
+        3, 4;
     std::cout << a << std::endl;
 
     double *m = a.toGpu();
 
-    GPU::Matrix b{MatixXD{2,2}}
+    GPU::Matrix b{MatrixXd{2,2}};
     b.fromGpu(m, 2, 2);
 
     std::cout << b << std::endl;

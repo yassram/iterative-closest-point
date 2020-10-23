@@ -11,6 +11,14 @@ using Eigen::MatrixXcd;
 
 namespace GPU
 {
+    class Matrix: public MatrixXd
+    {
+             public:
+                          void fromGpu(double *gpu_rep, unsigned row, unsigned col);
+                                   double *toGpu();
+                                        
+    };
+
     class ICP
     {
     public:
