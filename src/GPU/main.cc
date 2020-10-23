@@ -1,6 +1,6 @@
 #include <iostream>
 #include "header.hh"
-#include "load.hh"
+#include "../load.hh"
 #include <complex>
 #include "gpu.hh"
 

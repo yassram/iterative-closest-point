@@ -34,12 +34,14 @@ set(HEADERS
 set(SRCS_GPU
     src/GPU/main.cc
     src/GPU/gpu.cc
+    src/load.hh
 )
 
 
 set(HEADERS_GPU
     src/GPU/header.hh
     src/GPU/gpu.hh
+    src/load.cc
 )
 
 set(SRCS_GPU_CUDA
