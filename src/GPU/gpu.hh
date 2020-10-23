@@ -14,9 +14,10 @@ using Eigen::MatrixXcd;
 
 namespace GPU
 {
-
     class Matrix: public MatrixXd
-    {}
+    {
+
+    };
 
 
 
@@ -39,8 +40,8 @@ namespace GPU
               max_iter{max_iter_}
         {
             this->s = 1.;
-            this->r = Matrix::Identity(m_.rows(), m_.rows());
-            this->t = Matrix::Zero(m_.rows(), 1);
+            this->r = {Matrix::Identity(m_.rows(), m_.rows())};
+            this->t = {Matrix::Zero(m_.rows(), 1)};
         }
 
         ~ICP()
@@ -67,4 +68,4 @@ namespace GPU
         int max_iter;
         const double threshold = 1e-5;
     };
-} // namespace CPU
+} // namespace GPU

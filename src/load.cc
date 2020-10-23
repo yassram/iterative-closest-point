@@ -33,7 +33,7 @@ void update_coord(double x, double y, double z,
 
 
 
-MatrixXd load_matrix(const char *filename, double min_coord[3],
+GPU::Matrix load_matrix(const char *filename, double min_coord[3],
                      double max_coord[3])
 {
     std::ifstream infile;
@@ -63,12 +63,12 @@ MatrixXd load_matrix(const char *filename, double min_coord[3],
         update_coord(x, y, z, min_coord, max_coord);
         matrix.row(i) << x, y, z;
     }
-
-    return matrix.transpose();
+    GPU::Matrix res {matrix.transpose()};
+    return res;
 }
 
 //matrix 3,n du coup
-void write_matrix(MatrixXd matrix)
+void write_matrix(GPU::Matrix matrix)
 {
     auto matrix_t = matrix.transpose();
     std::ofstream output;

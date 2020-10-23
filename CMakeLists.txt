@@ -62,8 +62,8 @@ set_target_properties(compute PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../)
 
 # CPU
-add_executable(icp ${SRCS} ${HEADERS})
-target_link_libraries(icp Eigen3::Eigen)
+#add_executable(icp ${SRCS} ${HEADERS})
+#target_link_libraries(icp Eigen3::Eigen)
 
 # GPU
 add_executable(icp-gpu ${SRCS_GPU} ${HEADERS_GPU})
