@@ -8,12 +8,28 @@ using Eigen::ArrayXd;
 using Eigen::Vector3d;
 using Eigen::MatrixXcd;
 
+
+
+
+
 namespace GPU
 {
+
+    class Matrix: public MatrixXd
+    {}
+
+
+
+
+
+
+
+
+
     class ICP
     {
     public:
-        ICP(MatrixXd m_, MatrixXd p_, int max_iter_)
+        ICP(Matrix m_, Matrix p_, int max_iter_)
             : m{m_},
               p{p_},
               new_p{p_},
@@ -23,26 +39,26 @@ namespace GPU
               max_iter{max_iter_}
         {
             this->s = 1.;
-            this->r = MatrixXd::Identity(m_.rows(), m_.rows());
-            this->t = MatrixXd::Zero(m_.rows(), 1);
+            this->r = Matrix::Identity(m_.rows(), m_.rows());
+            this->t = Matrix::Zero(m_.rows(), 1);
         }
 
         ~ICP()
         {}
 
         void find_corresponding();
-        double find_alignment(MatrixXd y);
+        double find_alignment(Matrix y);
 
     public:
-        MatrixXd new_p;
+        Matrix new_p;
 
     private:
         double s;
-        MatrixXd t;
-        MatrixXd r;
+        Matrix t;
+        Matrix r;
 
-        MatrixXd m;
-        MatrixXd p;
+        Matrix m;
+        Matrix p;
 
         unsigned int np;
         unsigned int nm;

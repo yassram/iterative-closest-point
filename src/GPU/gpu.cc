@@ -9,14 +9,14 @@ namespace GPU
         for (int i = 0; i < this->max_iter; i++) {
             std::cerr << "[ICP] iteration number " << i << " | ";
 
-            MatrixXd Y = MatrixXd::Zero(this->dim, this->np);
+            Matrix Y = MatrixXd::Zero(this->dim, this->np);
             for (int j = 0; j < this->np; j++) {
 
-                MatrixXd pi = this->new_p.col(j);
-                MatrixXd d = MatrixXd::Zero(1, this->nm);
+                Matrix pi = this->new_p.col(j);
+                Matrix d = MatrixXd::Zero(1, this->nm);
 
                 for (int k = 0; k < this->nm; k++) {
-                    MatrixXd mk = this->m.col(k);
+                    Matrix mk = this->m.col(k);
                     auto t1 = pi - mk;
                     auto t2 = t1.array().pow(2).sum();
                     d(k) = sqrt(t2);
@@ -31,7 +31,7 @@ namespace GPU
             for (int j = 0; j < this->np; j++) {
                 this->new_p.col(j) = (this->s * this->r) * this->new_p.col(j) + this->t;
 
-                MatrixXd e = Y.col(j) - this->new_p.col(j);
+                Matrix e = Y.col(j) - this->new_p.col(j);
                 err = err + (e.transpose() * e)(0);
             }
 
@@ -44,7 +44,7 @@ namespace GPU
 
     }
 
-    int max_element_index(Eigen::EigenSolver<Eigen::MatrixXd>::EigenvalueType& eigen_value)
+    int max_element_index(Eigen::EigenSolver<Matrix>::EigenvalueType& eigen_value)
     {
         int index = 0;
         double max = real(eigen_value(0));
@@ -55,7 +55,7 @@ namespace GPU
         return index;
     }
 
-    double ICP::find_alignment(MatrixXd y)
+    double ICP::find_alignment(Matrix y)
     {
         auto dim_new_p = this->new_p.rows();
         auto n_new_p = this->new_p.cols();
@@ -80,8 +80,8 @@ namespace GPU
         auto mu_p = this->new_p.rowwise().mean();
         auto mu_y = y.rowwise().mean();
 
-        MatrixXd p_prime = this->new_p.colwise() - mu_p;
-        MatrixXd y_prime = y.colwise() - mu_y;
+        Matrix p_prime = this->new_p.colwise() - mu_p;
+        Matrix y_prime = y.colwise() - mu_y;
 
         auto px = p_prime.row(0);
         auto py = p_prime.row(1);
@@ -101,14 +101,14 @@ namespace GPU
         auto szy = (pz.array() * yy.array()).sum();
         auto szz = (pz.array() * yz.array()).sum();
 
-        MatrixXd n_matrix{4, 4};
+        Matrix n_matrix{4, 4};
         n_matrix << sxx + syy + szz, syz - szy, -1 * sxz + szx, sxy - syx,
             -1 * szy + syz, sxx - szz - syy, sxy + syx, sxz + szx,
             szx - sxz, syx + sxy, syy - szz - sxx, syz + szy,
             -1 * syx + sxy, szx + sxz, szy + syz, szz - syy - sxx;
 
 
-        Eigen::EigenSolver<MatrixXd> eigen_solver(n_matrix);
+        Eigen::EigenSolver<Matrix> eigen_solver(n_matrix);
         auto eigen_values = eigen_solver.eigenvalues();
         auto eigen_vectors = eigen_solver.eigenvectors();
         auto max_eigen_value_index = max_element_index(eigen_values);
@@ -118,19 +118,19 @@ namespace GPU
         double q2 = real(eigen_vectors(2, max_eigen_value_index));
         double q3 = real(eigen_vectors(3, max_eigen_value_index));
 
-        MatrixXd q_bar{4, 4};
+        Matrix q_bar{4, 4};
         q_bar << q0, -1. * q1, -1. * q2, -1. * q3,
             q1, q0, q3, -1. * q2,
             q2, -1. * q3, q0, q1,
             q3, q2, -1. * q1, q0;
 
-        MatrixXd q_caps{4, 4};
+        Matrix q_caps{4, 4};
         q_caps << q0, -1. * q1, -1. * q2, -1. * q3,
             q1, q0, -1. * q3, q2,
             q2, q3, q0, -1. * q1,
             q3, -1. * q2, q1, q0;
 
-        MatrixXd temp_r = (q_bar.conjugate().transpose() * q_caps).real();
+        Matrix temp_r = (q_bar.conjugate().transpose() * q_caps).real();
 
         this->r = temp_r.block(1, 1, 3, 3);
 
