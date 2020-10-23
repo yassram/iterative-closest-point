@@ -9,24 +9,8 @@ using Eigen::Vector3d;
 using Eigen::MatrixXcd;
 
 
-
-
-
 namespace GPU
 {
-    class Matrix: public MatrixXd
-    {
-
-    };
-
-
-
-
-
-
-
-
-
     class ICP
     {
     public:
