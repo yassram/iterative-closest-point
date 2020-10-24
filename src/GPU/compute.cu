@@ -54,15 +54,13 @@ void computeDim(unsigned width, unsigned height,
 }
 
 
-__global__ void compute_distance(double *m, double *pi, double *distance, int size){
-    int tx = threadIdx.x;
-    int ty = threadIdx.y;
-    int bx = blockIdx.x;
-    int by = blockIdx.y;
-    int bxDim = blockDim.x;
-    int byDim = blockDim.y;
+__global__ void compute_distance(double *m, double *pi, double *distance, int size, size_t pitch){
 
-    int i = (bx+ty)*bxDim + by*byDim + tx;
+    int tidx = blockIdx.x*blockDim.x + threadIdx.x;
+    int tidy = blockIdx.y*blockDim.y + threadIdx.y;
+    tidy = tidy * pitch;
+
+    int i = tidyx + tidy * pitch;
 
     if (i >= size)
         return;
