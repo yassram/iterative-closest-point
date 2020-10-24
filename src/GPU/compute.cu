@@ -85,7 +85,7 @@ __device__ void compute_distance(double *m, double *pi, double *distance, unsign
     distance[i] = x*x + y*y + z*z;
 }
 
-__device__ void find_min_distance(double *distance, double *minIdx,  unsigned int size) {
+__device__ void find_min_distance(double *distance, int *minIdx,  unsigned int size) {
     *minIdx = 0;
     for (unsigned i = 1; i < size; i++)
         if (distance[*minIdx] > distance[i])
@@ -109,18 +109,18 @@ int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
     cudaFree(m_gpu);
     cudaFree(pi_gpu);
 
-    double *minIdx;
-    cudaMalloc((void **) &minIdx, sizeof(double));
+    int *minIdx;
+    cudaMalloc((void **) &minIdx, sizeof(int));
     find_min_distance<<<1,1>>>(distance, minIdx, m.cols);
     cudaDeviceSynchronize();
 
     cudaFree(distance);
 
-    double *h_minIdx = (double *)std::malloc(sizeof(double));
-    cudaMemcpy(h_minIdx, minIdx, pitch, sizeof(double),
+    int h_minIdx = 0;
+    cudaMemcpy(&h_minIdx, minIdx, pitch, sizeof(int),
                cudaMemcpyDeviceToHost);
 
     cudaFree(minIdx);
 
-    rerurn *minIdx;
+    rerurn h_minIdx;
 }
