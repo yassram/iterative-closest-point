@@ -54,19 +54,22 @@ void computeDim(unsigned width, unsigned height,
 }
 
 
-__global__ void compute_distance(double *m, double *pi, double *distance, int size, size_t pitch){
+__global__ void compute_distance(double *m, size_t m_p, double *pi, size_t, pi_p,
+                                 double *distance, int size){
     int i = blockIdx.x*blockDim.x + threadIdx.x;
 
     if (i >= size)
         return;
 
+    m_p = m_p/sizeof(double);
     double mx = m[i];
-    double my = m[i + pitch/sizeof(double)];
-    double mz = m[i + 2*pitch/sizeof(double)];
+    double my = m[i + m_p];
+    double mz = m[i + 2*m_p];
 
+    pi_p = pi_p/sizeof(double);
     double x = pi[0] - mx;
-    double y = pi[1] - my;
-    double z = pi[2] - mz;
+    double y = pi[pi_p] - my;
+    double z = pi[2*pi_p] - mz;
 
     distance[i] = x*x + y*y + z*z;
     printf("\n> %d : dist = %lf (%lf, %lf, %lf)\n",i, distance[i], mx, my, mz);
