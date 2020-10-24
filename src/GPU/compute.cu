@@ -39,17 +39,18 @@ void test() {
 
 
 void call_test(){
-    GPU::Matrix a{MatrixXd{3,2}};
-    a << 1, 2, 3,
-        4, 5, 6;
+    GPU::Matrix a{MatrixXd{2,3}};
+    a << 1, 2,
+        3,4,
+        5, 6;
     std::cout << a << std::endl;
 
     size_t s;
     double *m = a.toGpu(&s);
     std::cout << "size: " << s << std::endl;
 
-    GPU::Matrix b{MatrixXd{3,2}};
-    b.fromGpu(m, 3, 2, s);
+    GPU::Matrix b{MatrixXd{2,3}};
+    b.fromGpu(m, 2, 3, s);
 
     std::cout << b << std::endl;
     cudaDeviceSynchronize();
