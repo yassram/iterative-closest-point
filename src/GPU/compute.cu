@@ -109,6 +109,5 @@ int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
                cudaMemcpyDeviceToHost);
 
     cudaFree(minIdx);
-    std::cout << "mincol: " << h_minIdx << std::endl;
     return h_minIdx;
 }
