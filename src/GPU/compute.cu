@@ -64,7 +64,8 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
     if (tidx >= size)
         return;
 
-    double mx = *( (double*) (((char*)m) + tidx) );
+    char *mm = (char*)m;
+    double mx = 0;//*( (double*) (((char*)m) + tidx) );
     double my = 0; // *( (double*) (((char*)m) + i + pitch) );
     double mz = 0; // *( (double*) (((char*)m) + i + 2*pitch) );
 
