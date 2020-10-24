@@ -60,3 +60,5 @@ namespace GPU
         const double threshold = 1e-5;
     };
 } // namespace GPU
+
+int compute_distance_w(GPU::Matrix m, GPU::Matrix pi);
