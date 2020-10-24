@@ -65,8 +65,8 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
         return;
 
     double mx = *( (double*) (((char*)m) + tidx) );
-    double my = *( (double*) (((char*)m) + i + pitch) );
-    double mz = *( (double*) (((char*)m) + i + 2*pitch) );
+    double my = 0; // *( (double*) (((char*)m) + i + pitch) );
+    double mz = 0; // *( (double*) (((char*)m) + i + 2*pitch) );
 
     printf("[size: %d / i: %d](%f, %f, %f) \n", size, i, mx, my, mz);
 
