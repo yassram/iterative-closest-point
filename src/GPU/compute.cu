@@ -78,8 +78,8 @@ __global__ void compute_distance(double *m, double *pi, double *distance, unsign
 
     double x, y, z;
     x = pi[0] - m[i];
-    y = pi[1] - m[i + 1];
-    z = pi[2] - m[i + 2];
+    y = pi[1] - m[i + size];
+    z = pi[2] - m[i + size*2];
 
     distance[i] = x*x + y*y + z*z;
 }
