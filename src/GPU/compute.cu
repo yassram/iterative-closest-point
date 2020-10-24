@@ -60,7 +60,7 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
     int tidy = blockIdx.y*blockDim.y + threadIdx.y;
     tidy = tidy * pitch;
 
-    int i = tidyx + tidy * pitch;
+    int i = tidx + tidy * pitch;
 
     if (i >= size)
         return;
