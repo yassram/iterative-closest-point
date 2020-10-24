@@ -82,6 +82,7 @@ __global__ void compute_distance(double *m, double *pi, double *distance, unsign
     z = pi[2] - m[i + size*2];
 
     distance[i] = x*x + y*y + z*z;
+    std::cout << distance[i] << std::endl;
 }
 
 __global__ void find_min_distance(double *distance, int *minIdx,  unsigned int size) {
