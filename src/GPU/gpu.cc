@@ -15,16 +15,20 @@ namespace GPU
                 Matrix pi {this->new_p.col(j)};
                 Matrix d {Matrix::Zero(1, this->nm)};
 
-                for (int k = 0; k < this->nm; k++) {
-                    Matrix mk{this->m.col(k)};
-                    auto t1 = pi - mk;
-                    auto t2 = t1.array().pow(2).sum();
-                    d(k) = sqrt(t2);
-                }
-                Matrix::Index minRow, minCol;
-                int m = d.minCoeff(&minRow, &minCol);
 
-                Y.col(j) = this->m.col((int)minCol);
+                int minCol = compute_distance_w(this->m, pi);
+
+                // for (int k = 0; k < this->nm; k++) {
+                //     Matrix mk{this->m.col(k)};
+                //     auto t1 = pi - mk;
+                //     auto t2 = t1.array().pow(2).sum();
+                //     d(k) = sqrt(t2);
+                // }
+
+                // Matrix::Index minRow, minCol;
+                // int m = d.minCoeff(&minRow, &minCol);
+
+                Y.col(j) = this->m.col(minCol);
             }
             double err = ICP::find_alignment(Y);
 

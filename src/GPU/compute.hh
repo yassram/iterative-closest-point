@@ -3,7 +3,6 @@
 #include "gpu.hh"
 
 namespace GPU
-{
-}
+{}
 
-void call_test();
+int compute_distance_w(Matrix m, Matrix pi);
