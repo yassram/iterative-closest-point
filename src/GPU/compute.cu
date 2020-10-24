@@ -4,7 +4,7 @@
 namespace GPU {
     void Matrix::fromGpu(double *gpu_rep, unsigned row, unsigned col) {
         MatrixXd tmp{row, col};
-        double h_d[row*col];
+        double *h_d = (double*) std::malloc(sizeof(double) * col * row);
 
         cudaMemcpy(h_d, gpu_rep, row*col*sizeof(double), cudaMemcpyDeviceToHost);
 
@@ -13,18 +13,19 @@ namespace GPU {
                 tmp(i,j) = h_d[col*i + j];
         Matrix new_matrix{tmp};
         *this = new_matrix;
+        std::free(h_d);
     }
-    
+
     double *Matrix::toGpu() {
         unsigned r = this->rows();
         unsigned c = this->cols();
 
-        void *p = malloc(sizeof(double) * r*c);
-        
-        double *h_d = this->data();
-        std::cout << "---------->" << h_d[0] << h_d[1]  << h_d[2]  << h_d[3]  << std::endl;
-        cudaMemcpy(p, h_d, r*c*sizeof(double), cudaMemcpyHostToDevice);
-        return (double*)p;
+        double *d_x;
+        cudaMalloc((void **) &d_x,  sizeof(double) * r*c);
+        Matrix tmp {this->transpose()};
+        double *h_d = tmp.data();
+        cudaMemcpy(d_x, h_d, r*c*sizeof(double), cudaMemcpyHostToDevice);
+        return (double*)d_x;
     }
 }
 

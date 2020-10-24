@@ -17,6 +17,8 @@ set(CMAKE_CXX_FLAGS "-std=c++17")
 set(CMAKE_CXX_FLAGS_DEBUG "-g3 -Werror")
 set(CMAKE_CXX_FLAGS_RELEASE "-Os")
 
+find_package(CUDA REQUIRED)
+
 cmake_policy(SET CMP0104 OLD)
 
 set(SRCS
@@ -34,12 +36,12 @@ set(HEADERS
 set(SRCS_GPU
     src/GPU/main.cc
     src/GPU/gpu.cc
-    src/load.hh
+    src/load.cc
 )
 
 
 set(HEADERS_GPU
-    src/load.cc
+    src/load.hh
     src/GPU/compute.hh
     src/GPU/gpu.hh
 )
