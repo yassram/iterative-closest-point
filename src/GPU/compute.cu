@@ -67,7 +67,7 @@ __global__ void compute_distance(double *m, double *pi, double *distance, unsign
     if (i >= size)
         return;
 
-    printf("[size: %ld / i: %ld](%lf, %lf, %lf) \n", size, i, m[i], m[i + size], m[i+size*2]);
+    printf("[size: %lu / i: %d](%lf, %lf, %lf) \n", size, i, m[i], m[i + size], m[i+size*2]);
 
     double x, y, z;
     x = pi[0] - m[i];
