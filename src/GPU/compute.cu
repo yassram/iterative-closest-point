@@ -54,7 +54,7 @@ void computeDim(unsigned width, unsigned height,
 }
 
 
-__global__ void compute_distance(double *m, size_t m_p, double *pi, size_t, pi_p,
+__global__ void compute_distance(double *m, size_t m_p, double *pi, size_t pi_p,
                                  double *distance, int size){
     int i = blockIdx.x*blockDim.x + threadIdx.x;
 
@@ -96,7 +96,7 @@ int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
 
     double *distance;
     cudaMalloc((void **) &distance, sizeof(double)*m.cols());
-    compute_distance<<<distGrd, distBlk>>>(m_gpu, pi_gpu, distance, m.cols(), m_p);
+    compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, pi_gpu, pi_p, distance, m.cols());
     cudaDeviceSynchronize();
 
     cudaFree(m_gpu);
