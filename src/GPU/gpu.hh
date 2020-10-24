@@ -13,9 +13,9 @@ namespace GPU
 {
     class Matrix: public MatrixXd
     {
-        public:
-             void fromGpu(double *gpu_rep, unsigned row, unsigned col);
-             double *toGpu();
+    public:
+        void Matrix::fromGpu(double *gpu_rep, unsigned row, unsigned col, size_t pitch);
+        double *toGpu(size_t *pitch);
     };
 
     class ICP
