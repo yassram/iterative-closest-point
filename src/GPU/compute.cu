@@ -82,7 +82,6 @@ __global__ void compute_distance(double *m, double *pi, double *distance, unsign
     z = pi[2] - m[i + size*2];
 
     distance[i] = x*x + y*y + z*z;
-    printf("%ld", distance[i]);
 }
 
 __global__ void find_min_distance(double *distance, int *minIdx,  unsigned int size) {
@@ -115,7 +114,7 @@ int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
 
     cudaFree(distance);
 
-    int h_minIdx = 0;
+    int h_minIdx = 10;
     cudaMemcpy(&h_minIdx, minIdx, sizeof(int),
                cudaMemcpyDeviceToHost);
 
