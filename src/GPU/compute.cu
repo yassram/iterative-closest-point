@@ -109,7 +109,7 @@ int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
 
     int *minIdx;
     cudaMalloc((void **) &minIdx, sizeof(int));
-    find_min_distance<<<1, 1>>>(distance, minIdx, m.cols);
+    find_min_distance<<<1, 1>>>(distance, minIdx, m.cols());
     cudaDeviceSynchronize();
 
     cudaFree(distance);
