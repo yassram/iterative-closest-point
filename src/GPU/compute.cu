@@ -64,8 +64,7 @@ void computeDim(unsigned width, unsigned height,
 }
 
 
-__kernel__
-void compute_distance(double *m, double *pi, double *distance, unsigned int size){
+__kernel__ void compute_distance(double *m, double *pi, double *distance, unsigned int size){
     unsigned int tx = threadIdx.x;
     unsigned int ty = threadIdx.y;
     unsigned int bx = blockIdx.x;
@@ -86,8 +85,7 @@ void compute_distance(double *m, double *pi, double *distance, unsigned int size
     distance[i] = x*x + y*y + z*z;
 }
 
-__kernel__
-void find_min_distance(double *distance, double *minIdx,  unsigned int size) {
+__kernel__ void find_min_distance(double *distance, double *minIdx,  unsigned int size) {
     *minIdx = 0;
     for (unsigned i = 1; i < size; i++)
         if (distance[*minIdx] > distance[i])
