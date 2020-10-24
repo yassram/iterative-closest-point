@@ -27,7 +27,7 @@ namespace GPU
 
                 // Matrix::Index minRow, minCol;
                 // int m = d.minCoeff(&minRow, &minCol);
-                std::cout << "min" << std::cout << minCol << std::endl;
+                std::cout << "min" << minCol << std::endl;
                 Y.col(j) = this->m.col(minCol);
             }
             double err = ICP::find_alignment(Y);
