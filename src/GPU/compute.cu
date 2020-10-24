@@ -58,7 +58,7 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
     int tidx = blockIdx.x*blockDim.x + threadIdx.x;
     int tidy = blockIdx.y*blockDim.y + threadIdx.y;
 
-    printf("\ntidx: %d, tidy: %d, pitch: %zu", tidx, tidy, pitch);
+    printf("\ntidx: %d, tidy: %d, pitch: %lu, size: %d", tidx, tidy, pitch, size);
     int i = tidx + tidy * pitch;
 
     if (tidx >= size)
