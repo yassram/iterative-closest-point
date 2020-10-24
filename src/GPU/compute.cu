@@ -6,7 +6,7 @@ namespace GPU {
         MatrixXd tmp{row, col};
         double *h_d = (double*) std::malloc(sizeof(double) * col * row);
 
-        cudaMemcpy2D(h_d, sizeof(double)*col, gpu_rep, pitch, col*sizeof(double),
+        cudaMemcpy2D(h_d, sizeof(double)*col, gpu_rep, pitch, pitch/row,
                      row, cudaMemcpyDeviceToHost);
 
         for(unsigned i = 0; i < row; ++i)
