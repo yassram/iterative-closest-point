@@ -97,8 +97,8 @@ int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
     double *m_gpu = m.toGpu(&m_p);
     double *pi_gpu = pi.toGpu(&pi_p);
 
-    double distBlk;
-    double distGrd;
+    dim3 distBlk;
+    dim3 distGrd;
     computeDim(m.cols(), 1, &distBlk, &distGrd);
 
     double *distance;
@@ -117,10 +117,10 @@ int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
     cudaFree(distance);
 
     int h_minIdx = 0;
-    cudaMemcpy(&h_minIdx, minIdx, pitch, sizeof(int),
+    cudaMemcpy(&h_minIdx, minIdx, sizeof(int),
                cudaMemcpyDeviceToHost);
 
     cudaFree(minIdx);
 
-    rerurn h_minIdx;
+    return h_minIdx;
 }
