@@ -73,7 +73,7 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
 
 __global__ void find_min_distance(double *distance, int *minIdx, int size) {
     *minIdx = 0;
-    for (unsigned i = 1; i < size; i++)
+    for (int i = 1; i < size; i++)
         if (distance[*minIdx] > distance[i])
             *minIdx = i;
  }
@@ -106,5 +106,6 @@ int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
                cudaMemcpyDeviceToHost);
 
     cudaFree(minIdx);
+    std::cout << "mincol: " << h_minIdx << std::endl;
     return h_minIdx;
 }
