@@ -68,13 +68,13 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
     double my = 0; // *( (double*) (((char*)m) + i + pitch) );
     double mz = 0; // *( (double*) (((char*)m) + i + 2*pitch) );
 
-    printf("[size: %d / i: %d](%f, %f, %f) \n", size, mx, my, mz);
+    printf("[tidx: %d](%f, %f, %f) \n", tidx, mx, my, mz);
 
     double x = pi[0] - mx;
     double y = pi[1] - my;
     double z = pi[2] - mz;
 
-    distance[i] = x*x + y*y + z*z;
+    distance[tidx] = x*x + y*y + z*z;
 }
 
 __global__ void find_min_distance(double *distance, int *minIdx, int size) {
