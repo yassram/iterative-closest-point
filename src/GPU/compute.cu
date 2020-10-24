@@ -64,12 +64,17 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
     if (i >= size)
         return;
 
-    printf("[size: %d / i: %d](%f, %f, %f) \n", size, i, m[i], m[i + size], m[i+size*2]);
+    double mx, my, mz;
+    mx = *( (double*) ((char*)m + i) );
+    my = *( (double*) ((char*)m + i + pitch) );
+    mz = *( (double*) ((char*)m + i + 2*pitch) );
+
+    printf("[size: %d / i: %d](%f, %f, %f) \n", size, i, mx, my, mz);
 
     double x, y, z;
-    x = pi[0] - *( (double*) ((char*)m + i) );
-    y = pi[1] - *( (double*) ((char*)m + i + pitch) );
-    z = pi[2] - *( (double*) ((char*)m + i + 2*pitch) );
+    x = pi[0] - mx;
+    y = pi[1] - my;
+    z = pi[2] - mz;
 
     distance[i] = x*x + y*y + z*z;
 }
