@@ -25,6 +25,7 @@ namespace CPU
                 MatrixXd::Index minRow, minCol;
                 int m = d.minCoeff(&minRow, &minCol);
 
+                std::cout << "minCol: " << (int)minCol << std::endl;
                 Y.col(j) = this->m.col((int)minCol);
             }
             double err = ICP::find_alignment(Y);
