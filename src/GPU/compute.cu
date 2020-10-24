@@ -65,7 +65,7 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
 
     double mx = m[tidx];
     double my = m[tidx + pitch/sizeof(double)];
-    double mz = m[tidx + pitch/sizeof(double)];
+    double mz = m[tidx + 2*pitch/sizeof(double)];
 
     printf("[tidx: %d](%f, %f, %f) \n", tidx, mx, my, mz);
 
