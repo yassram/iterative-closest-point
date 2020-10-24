@@ -42,7 +42,7 @@ void computeDim(unsigned width, unsigned height,
     // int yMaxBlocks = deviceProp.maxGridSize[1];
 
     int xThreads = 32; // deviceProp.maxThreadsDim[0];
-    int yThreads = 1; // deviceProp.maxThreadsDim[1];
+    int yThreads = 32; // deviceProp.maxThreadsDim[1];
 
     // int maxThreadPB = deviceProp.maxThreadsPerBlock;
 
@@ -55,25 +55,20 @@ void computeDim(unsigned width, unsigned height,
 
 
 __global__ void compute_distance(double *m, double *pi, double *distance, int size, size_t pitch){
-    int tidx = blockIdx.x*blockDim.x + threadIdx.x;
-    int tidy = blockIdx.y*blockDim.y + threadIdx.y;
+    int i = blockIdx.x*blockDim.x + threadIdx.x;
 
-    printf("\ntidx: %d, tidy: %d, pitch: %lu, size: %d", tidx, tidy, pitch, size);
-
-    if (tidx >= size)
+    if (i >= size)
         return;
 
-    double mx = m[tidx];
-    double my = m[tidx + pitch/sizeof(double)];
-    double mz = m[tidx + 2*pitch/sizeof(double)];
-
-    printf("[tidx: %d](%f, %f, %f) \n", tidx, mx, my, mz);
+    double mx = m[i];
+    double my = m[i + pitch/sizeof(double)];
+    double mz = m[i + 2*pitch/sizeof(double)];
 
     double x = pi[0] - mx;
     double y = pi[1] - my;
     double z = pi[2] - mz;
 
-    distance[tidx] = x*x + y*y + z*z;
+    distance[i] = x*x + y*y + z*z;
 }
 
 __global__ void find_min_distance(double *distance, int *minIdx, int size) {
