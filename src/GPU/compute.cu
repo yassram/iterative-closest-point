@@ -63,10 +63,9 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
     if (tidx >= size)
         return;
 
-    // char *mm = (char*)m;
-    double mx = m[tidx];//*( (double*) (((char*)m) + tidx) );
-    double my = 0; // *( (double*) (((char*)m) + i + pitch) );
-    double mz = 0; // *( (double*) (((char*)m) + i + 2*pitch) );
+    double mx = m[tidx];
+    double my = m[tidx + pitch/sizeof(double)];
+    double mz = m[tidx + pitch/sizeof(double)];
 
     printf("[tidx: %d](%f, %f, %f) \n", tidx, mx, my, mz);
 
