@@ -2,7 +2,4 @@
 #include <iostream>
 #include "gpu.hh"
 
-namespace GPU
-{}
-
-int compute_distance_w(Matrix m, Matrix pi);
+int compute_distance_w(GPU::Matrix m, GPU::Matrix pi);

@@ -33,6 +33,5 @@ int main(int argc, char* argv[])
     icp.find_corresponding();
     write_matrix(icp.new_p);
 
-    call_test();
     return 0;
 }

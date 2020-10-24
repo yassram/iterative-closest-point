@@ -94,7 +94,7 @@ void find_min_distance(double *distance, double *minIdx,  unsigned int size) {
             *minIdx = i;
  }
 
-int compute_distance_w(Matrix m, Matrix pi){
+int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
     size_t m_p, pi_p;
     double *m_gpu = m.toGpu(&m_p);
     double *pi_gpu = pi.toGpu(&pi_p);
