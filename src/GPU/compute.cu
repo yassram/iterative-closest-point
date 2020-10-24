@@ -6,7 +6,7 @@ namespace GPU {
         MatrixXd tmp{row, col};
         double *h_d = (double*) std::malloc(sizeof(double) * col * row);
 
-        cudaMemcpy2D(h_d, sizeof(double)*row*col, gpu_rep, pitch, pitch/row,
+        cudaMemcpy2D(h_d, sizeof(double)*col, gpu_rep, pitch, col*sizeof(double),
                      row, cudaMemcpyDeviceToHost);
 
         for(unsigned i = 0; i < row; ++i)
@@ -25,7 +25,7 @@ namespace GPU {
         cudaMallocPitch((void **) &d_x, pitch, sizeof(double) * c, r);
         Matrix tmp {this->transpose()};
         double *h_d = tmp.data();
-        cudaMemcpy2D(d_x, *pitch, h_d, r*c*sizeof(double), sizeof(double)*c,
+        cudaMemcpy2D(d_x, *pitch, h_d, c*sizeof(double), sizeof(double)*c,
                      r, cudaMemcpyHostToDevice);
         return (double*)d_x;
     }
