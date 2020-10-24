@@ -54,7 +54,7 @@ void computeDim(unsigned width, unsigned height,
 }
 
 
-__global__ void compute_distance(double *m, double *pi, double *distance, unsigned int size){
+__global__ void compute_distance(double *m, double *pi, double *distance, int size){
     int tx = threadIdx.x;
     int ty = threadIdx.y;
     int bx = blockIdx.x;
@@ -67,7 +67,7 @@ __global__ void compute_distance(double *m, double *pi, double *distance, unsign
     if (i >= size)
         return;
 
-    printf("[size: %lu / i: %d](%lf, %lf, %lf) \n", size, i, m[i], m[i + size], m[i+size*2]);
+    printf("[size: %d / i: %d](%f, %f, %f) \n", size, i, m[i], m[i + size], m[i+size*2]);
 
     double x, y, z;
     x = pi[0] - m[i];
@@ -77,7 +77,7 @@ __global__ void compute_distance(double *m, double *pi, double *distance, unsign
     distance[i] = x*x + y*y + z*z;
 }
 
-__global__ void find_min_distance(double *distance, int *minIdx,  unsigned int size) {
+__global__ void find_min_distance(double *distance, int *minIdx, int size) {
     *minIdx = 0;
     for (unsigned i = 1; i < size; i++)
         if (distance[*minIdx] > distance[i])
