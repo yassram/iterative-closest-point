@@ -55,19 +55,19 @@ void computeDim(unsigned width, unsigned height,
 
 
 __global__ void compute_distance(double *m, double *pi, double *distance, unsigned int size){
-    unsigned int tx = threadIdx.x;
-    unsigned int ty = threadIdx.y;
-    unsigned int bx = blockIdx.x;
-    unsigned int by = blockIdx.y;
-    unsigned int bxDim = blockDim.x;
-    unsigned int byDim = blockDim.y;
+    int tx = threadIdx.x;
+    int ty = threadIdx.y;
+    int bx = blockIdx.x;
+    int by = blockIdx.y;
+    int bxDim = blockDim.x;
+    int byDim = blockDim.y;
 
-    unsigned int i = (bx+ty)*bxDim + by*byDim + tx;
+    int i = (bx+ty)*bxDim + by*byDim + tx;
 
     if (i >= size)
         return;
 
-    printf("[i: %ld](%lf, %lf, %lf) \n", m[i], m[i + size], m[i+size*2]);
+    printf("[size: %ld / i: %ld](%lf, %lf, %lf) \n", size, i, m[i], m[i + size], m[i+size*2]);
 
     double x, y, z;
     x = pi[0] - m[i];
