@@ -46,6 +46,7 @@ void call_test(){
 
     size_t s;
     double *m = a.toGpu(&s);
+    std::cout << "size: " << s << std::endl;
 
     GPU::Matrix b{MatrixXd{2,2}};
     b.fromGpu(m, 2, 2, s);
