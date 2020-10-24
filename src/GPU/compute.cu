@@ -56,8 +56,8 @@ void computeDim(unsigned width, unsigned height,
 
     *block = dim3(xThreads, yThreads, 1);
 
-    int xBlocks = (int) std::ceil(width / xThreads);
-    int yBlocks = (int) std::ceil(height / yThreads);
+    int xBlocks = (int) std::ceil(((double)width) / xThreads);
+    int yBlocks = (int) std::ceil(((double)height) / yThreads);
     std::cout << xBlocks << ", " << yBlocks << std::endl ;
     *grid = dim3(xBlocks, yBlocks, 1);
 }
