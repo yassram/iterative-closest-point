@@ -1,12 +1,12 @@
 #include "compute.hh"
 
-#define cudaCheckError() {                                              \
-        cudaError_t e=cudaGetLastError();                               \
-        if(e!=cudaSuccess) {                                            \
-            printf("Cuda failure %s:%d: '%s'\n",__FILE__,__LINE__,cudaGetErrorString(e)); \
-            exit(EXIT_FAILURE);                                                 \
-        }                                                               \
-    }
+// #define cudaCheckError() {                                              \
+//         cudaError_t e=cudaGetLastError();                               \
+//         if(e!=cudaSuccess) {                                            \
+//             printf("Cuda failure %s:%d: '%s'\n",__FILE__,__LINE__,cudaGetErrorString(e)); \
+//             exit(EXIT_FAILURE);                                                 \
+//         }                                                               \
+//     }
 
 namespace GPU {
     void Matrix::fromGpu(double *gpu_rep, unsigned row, unsigned col, size_t pitch) {
@@ -30,7 +30,7 @@ namespace GPU {
 
         double *d_x;
         cudaMallocPitch((void **) &d_x, pitch, sizeof(double) * c, r);
-        cudaCheckError();
+        // cudaCheckError();
 
         Matrix tmp {this->transpose()};
         double *h_d = tmp.data();
@@ -46,14 +46,13 @@ void computeDim(unsigned width, unsigned height,
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, devId);
 
-    int xMaxBlocks = deviceProp.maxGridSize[0];
-    int yMaxBlocks = deviceProp.maxGridSize[1];
+    // int xMaxBlocks = deviceProp.maxGridSize[0];
+    // int yMaxBlocks = deviceProp.maxGridSize[1];
 
     int xThreads = 32; // deviceProp.maxThreadsDim[0];
     int yThreads = 32; // deviceProp.maxThreadsDim[1];
 
-    int maxThreadPB = deviceProp.maxThreadsPerBlock;
-
+    // int maxThreadPB = deviceProp.maxThreadsPerBlock;
 
     *block = dim3(xThreads, yThreads, 1);
 
@@ -110,7 +109,7 @@ int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
 
     int *minIdx;
     cudaMalloc((void **) &minIdx, sizeof(int));
-    find_min_distance<<<1, 1>>>(distance, minIdx, m.cols());
+    find_min_distance<<<1, 1>>>(distance, minIdx, m.cols);
     cudaDeviceSynchronize();
 
     cudaFree(distance);
