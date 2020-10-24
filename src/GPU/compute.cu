@@ -69,13 +69,18 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
     double z = pi[2] - mz;
 
     distance[i] = x*x + y*y + z*z;
+    printf("\n> %d : dist = %lf (%lf, %lf, %lf)\n",i, distance[i], mx, my, mz);
 }
 
 __global__ void find_min_distance(double *distance, int *minIdx, int size) {
     *minIdx = 0;
-    for (int i = 1; i < size; i++)
-        if (distance[*minIdx] > distance[i])
+    for (int i = 1; i < size; i++){
+        printf("\n %d : dist = %lf \n",i, distance[i]);
+        if (distance[*minIdx] > distance[i]) {
             *minIdx = i;
+            printf("new min = %lf", distance[i]);
+        }
+    }
  }
 
 int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
