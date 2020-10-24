@@ -64,7 +64,7 @@ void computeDim(unsigned width, unsigned height,
 }
 
 
-__device__ void compute_distance(double *m, double *pi, double *distance, unsigned int size){
+__global__ void compute_distance(double *m, double *pi, double *distance, unsigned int size){
     unsigned int tx = threadIdx.x;
     unsigned int ty = threadIdx.y;
     unsigned int bx = blockIdx.x;
@@ -85,7 +85,7 @@ __device__ void compute_distance(double *m, double *pi, double *distance, unsign
     distance[i] = x*x + y*y + z*z;
 }
 
-__device__ void find_min_distance(double *distance, int *minIdx,  unsigned int size) {
+__global__ void find_min_distance(double *distance, int *minIdx,  unsigned int size) {
     *minIdx = 0;
     for (unsigned i = 1; i < size; i++)
         if (distance[*minIdx] > distance[i])
