@@ -1,12 +1,5 @@
 #include "compute.hh"
 
-// #define cudaCheckError() {                                              \
-//         cudaError_t e=cudaGetLastError();                               \
-//         if(e!=cudaSuccess) {                                            \
-//             printf("Cuda failure %s:%d: '%s'\n",__FILE__,__LINE__,cudaGetErrorString(e)); \
-//             exit(EXIT_FAILURE);                                                 \
-//         }                                                               \
-//     }
 
 namespace GPU {
     void Matrix::fromGpu(double *gpu_rep, unsigned row, unsigned col, size_t pitch) {
@@ -30,7 +23,6 @@ namespace GPU {
 
         double *d_x;
         cudaMallocPitch((void **) &d_x, pitch, sizeof(double) * c, r);
-        // cudaCheckError();
 
         Matrix tmp {this->transpose()};
         double *h_d = tmp.data();
@@ -75,6 +67,8 @@ __global__ void compute_distance(double *m, double *pi, double *distance, unsign
     if (i >= size)
         return;
 
+    printf("(%ld, %ld, %ld) \n", m[i], m[i + size], m[i+size*2]);
+
     double x, y, z;
     x = pi[0] - m[i];
     y = pi[1] - m[i + size];
@@ -113,7 +107,7 @@ int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
 
     cudaFree(distance);
 
-    int h_minIdx = 10;
+    int h_minIdx = 0;
     cudaMemcpy(&h_minIdx, minIdx, sizeof(int),
                cudaMemcpyDeviceToHost);
 
