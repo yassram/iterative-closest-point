@@ -59,17 +59,16 @@ __global__ void compute_distance(double *m, double *pi, double *distance, int si
     int tidy = blockIdx.y*blockDim.y + threadIdx.y;
 
     printf("\ntidx: %d, tidy: %d, pitch: %lu, size: %d", tidx, tidy, pitch, size);
-    int i = tidx + tidy;
 
     if (tidx >= size)
         return;
 
-    char *mm = (char*)m;
-    double mx = 0;//*( (double*) (((char*)m) + tidx) );
+    // char *mm = (char*)m;
+    double mx = m[tidx];//*( (double*) (((char*)m) + tidx) );
     double my = 0; // *( (double*) (((char*)m) + i + pitch) );
     double mz = 0; // *( (double*) (((char*)m) + i + 2*pitch) );
 
-    printf("[size: %d / i: %d](%f, %f, %f) \n", size, i, mx, my, mz);
+    printf("[size: %d / i: %d](%f, %f, %f) \n", size, mx, my, mz);
 
     double x = pi[0] - mx;
     double y = pi[1] - my;
