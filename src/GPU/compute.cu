@@ -103,9 +103,9 @@ __global__ void find_Y(double *distance, size_t distance_p,
         }
     }
 
-    double mx = m[j];
-    double my = m[j + m_p];
-    double mz = m[j + 2*m_p];
+    double mx = m[minIdx];
+    double my = m[minIdx + m_p];
+    double mz = m[minIdx + 2*m_p];
 
      printf("> (j = %d) : idx = %d| distMin = %lf | (%lf, %lf, %lf)\n",
             j, minIdx, distance[minIdx + j * distance_p], mx, my, mz);
