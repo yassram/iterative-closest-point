@@ -74,8 +74,9 @@ __global__ void compute_distance(double *m, size_t m_p, double *p, size_t p_p,
 
     distance_p = distance_p/sizeof(double);
     distance[i + j * distance_p] = x*x + y*y + z*z;
+
     printf("> (%d,%d) : dist = %lf (%lf, %lf, %lf) (%lf, %lf, %lf)\n",
-           i, j, distance[i], p[j], p[j + p_p], p[j + 2*p_p], mx, my, mz);
+           i, j, distance[i + j * distance_p], p[j], p[j + p_p], p[j + 2*p_p], mx, my, mz);
 }
 
 __global__ void find_Y(double *distance, size_t distance_p,
@@ -112,6 +113,7 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
     size_t distance_p;
 
     cudaMallocPitch((void **) &distance, &distance_p, sizeof(double) * m.cols(), p.cols());
+
     compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu, p_p, distance, distance_p, m.cols(), p.cols());
     cudaDeviceSynchronize();
 
