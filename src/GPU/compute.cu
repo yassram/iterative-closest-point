@@ -107,8 +107,8 @@ __global__ void find_Y(double *distance, size_t distance_p,
     double my = m[j + m_p];
     double mz = m[j + 2*m_p];
 
-     printf("> (j = %d) : distMin = %lf | (%lf, %lf, %lf)\n",
-            j, distance[minIdx + j * distance_p], mx, my, mz);
+     printf("> (j = %d) : idx = %d| distMin = %lf | (%lf, %lf, %lf)\n",
+            j, minIdx, distance[minIdx + j * distance_p], mx, my, mz);
 
     Y[j] = mx;
     Y[j+ Y_p] = my;
