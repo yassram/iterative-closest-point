@@ -95,6 +95,9 @@ __global__ void find_Y(double *distance, size_t distance_p,
         if (distance[minIdx + j*distance_p] > distance[i + j+distance_p])
             minIdx = i;
 
+     printf("> (%d) : dist = %lf \n",
+            j, distance[minIdx + j * distance_p]);
+
     Y[j] = m[minIdx];
     Y[j+ Y_p] = m[minIdx + m_p];
     Y[j+ 2*Y_p] = m[minIdx + 2*m_p];
@@ -128,6 +131,7 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
     cudaFree(distance);
 
     Y.fromGpu(Y_gpu, Y.rows(), Y.cols(), Y_p);
+    std::cout << "cu: \n" << Y << "\n"<< std::endl;
 
     cudaFree(Y_gpu);
     return Y;
