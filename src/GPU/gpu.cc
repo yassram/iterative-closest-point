@@ -19,6 +19,7 @@ namespace GPU
             // }
 
             Y = compute_Y_w(m,new_p,Y);
+            std::cout << Y << std::endl;
 
             double err = ICP::find_alignment(Y);
 
