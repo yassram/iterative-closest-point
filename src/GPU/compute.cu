@@ -92,6 +92,7 @@ __global__ void find_Y(double *distance, size_t distance_p,
 
     distance_p = distance_p/sizeof(double);
     Y_p = Y_p / sizeof(double);
+    m_p = m_p/ sizeof(double);
 
     int minIdx = 0;
     for (int i = 1; i < xSize; i++) {
