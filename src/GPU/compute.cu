@@ -82,7 +82,7 @@ __global__ void compute_distance(double *m, size_t m_p, double *p, size_t p_p,
 __global__ void find_Y(double *distance, size_t distance_p,
                                   double *m, size_t m_p, double *Y, size_t Y_p,
                                   int xSize, int ySize) {
-    int j = blockIdx.x*blockDim.x + threadIdx.x;
+    int j = blockIdx.y*blockDim.y + threadIdx.y;
 
     if (j >= ySize)
         return;
