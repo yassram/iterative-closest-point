@@ -70,4 +70,4 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../)
 
 # GPU
 add_executable(icp-gpu ${SRCS_GPU_CUDA} ${HEADERS_GPU_CUDA})
-target_link_libraries(icp-gpu PRIVATE compute Eigen3::Eigen)
+target_link_libraries(icp-gpu PRIVATE compute)
