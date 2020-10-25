@@ -153,3 +153,62 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
     cudaFree(Y_gpu);
     return Y;
 }
+
+__global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double *t_gpu,
+                size_t Y_p, size_t p_p, size_t sr_p, size_t t_p, unsigned int size)
+{
+    int i = blockIdx.x*blockDim.x + threadIdx.x;
+
+    if (i >= size)
+        return;
+
+    Y_p = Y_p / sizeof(double);
+    p_p = p_p / sizeof(double);
+    sr_p = sr_p / sizeof(double);
+    t_p = t_p / sizeof(double);
+
+    double px = sr_gpu[0] * p_gpu[i] + sr_gpu[1] * p_gpu[i + p_p] + sr_gpu[2] * p_gpu[i + 2* p_p];
+    double py = sr_gpu[sr_p] * p_gpu[i] + sr_gpu[1 + sr_p] * p_gpu[i + p_p] + sr_gpu[2 + sr_p] * p_gpu[i + 2* p_p];
+    double pz = sr_gpu[2 * sr_p] * p_gpu[i] + sr_gpu[1 + 2*sr_p] * p_gpu[i + p_p] + sr_gpu[2 + 2*sr_p] * p_gpu[i + 2 * p_p];
+
+    p_gpu[i] = px + t_gpu[0];
+    p_gpu[i + p_p] = py + t_gpu[t_p];
+    p_gpu[i + 2*p_p] = pz + t_gpu[2*t_p];
+
+    Y_gpu[i] = Y_gpu[i] - p_gpu[i];
+    Y_gpu[i + Y_p] = Y_gpu[i + Y_p] - p_gpu[i + p_p];
+    Y_gpu[i + 2*Y_p] = Y_gpu[i + 2*Y_p] - p_gpu[i + 2*p_p];
+}
+
+
+//std::tuple<double, GPU::Matrix> 
+double compute_err_w(GPU::Matrix Y, GPU::Matrix *p,
+                                    GPU::Matrix sr, GPU::Matrix t)
+{
+    size_t p_p, sr_p, t_p, Y_p;
+    double *p_gpu = p->toGpu(&p_p);
+    double *sr_gpu = sr.toGpu(&sr_p);
+    double *t_gpu = t.toGpu(&t_p);
+    double *Y_gpu =Y.toGpu(&Y_p);
+
+
+    dim3 distBlk, distGrd;
+    computeDim(p->cols(), 1, &distBlk, &distGrd);
+    compute_err<<<distGrd,distBlk>>>(Y_gpu, p_gpu, sr_gpu, t_gpu, Y_p, p_p,
+                                                        sr_p, t_p, p->cols());
+    cudaDeviceSynchronize();
+
+    p->fromGpu(p_gpu, p->rows(), p->cols(), p_p);
+    cudaFree(p_gpu);
+    cudaFree(sr_gpu);
+    cudaFree(t_gpu);
+
+    //on réutilise Y pr calculer l'erreur
+    Y.fromGpu(Y_gpu, Y.rows(), Y.cols(), Y_p);
+    cudaFree(Y_gpu);
+
+    double err = (Y.transpose() * Y)(0);
+    return err;
+}
+
+

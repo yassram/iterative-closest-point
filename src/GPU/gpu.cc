@@ -31,6 +31,10 @@ namespace GPU
                 err = err + (e.transpose() * e)(0);
             }
 
+
+            //Matrix sr {s*r};
+            //err += compute_err_w(Y, &new_p, sr, t);
+
             err /= this->np;
             std::cerr << "err = " << err << std::endl;
 

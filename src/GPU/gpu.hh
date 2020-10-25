@@ -62,3 +62,5 @@ namespace GPU
 } // namespace GPU
 
 GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix pi, GPU::Matrix Y);
+double compute_err_w(GPU::Matrix Y, GPU::Matrix *p,
+                                     GPU::Matrix sr, GPU::Matrix t);
