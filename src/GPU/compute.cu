@@ -82,8 +82,8 @@ __global__ void compute_distance(double *m, size_t m_p, double *p, size_t p_p,
 
 
 __global__ void find_Y(double *distance, size_t distance_p,
-                                  double *m, size_t m_p, double *Y, size_t Y_p,
-                                  int xSize, int ySize) {
+                       double *m, size_t m_p, double *Y, size_t Y_p,
+                       int xSize, int ySize) {
 
     int j = blockIdx.y*blockDim.y + threadIdx.y;
 
@@ -96,8 +96,8 @@ __global__ void find_Y(double *distance, size_t distance_p,
 
     int minIdx = 0;
     for (int i = 1; i < xSize; i++) {
-        printf("> (%i, %d) : current=%lf vs %lf \n",
-               i, j, distance[minIdx + j * distance_p], distance[i + j*distance_p]);
+        // printf("> (%i, %d) : current=%lf vs %lf \n",
+               // i, j, distance[minIdx + j * distance_p], distance[i + j*distance_p]);
         if (distance[minIdx + j*distance_p] > distance[i + j*distance_p]){
             minIdx = i;
             // printf("YES\n");
@@ -108,8 +108,8 @@ __global__ void find_Y(double *distance, size_t distance_p,
     double my = m[minIdx + m_p];
     double mz = m[minIdx + 2*m_p];
 
-     printf("> (j = %d) : idx = %d| distMin = %lf | (%lf, %lf, %lf)\n",
-            j, minIdx, distance[minIdx + j * distance_p], mx, my, mz);
+     // printf("> (j = %d) : idx = %d| distMin = %lf | (%lf, %lf, %lf)\n",
+            // j, minIdx, distance[minIdx + j * distance_p], mx, my, mz);
 
     Y[j] = mx;
     Y[j+ Y_p] = my;
@@ -150,8 +150,8 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
     cudaFree(distance);
 
     Y.fromGpu(Y_gpu, Y.rows(), Y.cols(), Y_p);
-    std::cout  << Y << "\n"<< std::endl;
-    std::cout  << m << "\n"<< std::endl;
+    // std::cout  << Y << "\n"<< std::endl;
+    // std::cout  << m << "\n"<< std::endl;
 
     cudaFree(Y_gpu);
     return Y;
