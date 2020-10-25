@@ -145,7 +145,8 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
     cudaFree(distance);
 
     Y.fromGpu(Y_gpu, Y.rows(), Y.cols(), Y_p);
-    // std::cout << "cu: \n" << Y << "\n"<< std::endl;
+    std::cout  << Y << "\n"<< std::endl;
+    std::cout  << m << "\n"<< std::endl;
 
     cudaFree(Y_gpu);
     return Y;
