@@ -145,8 +145,8 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
     // computeDim(1, p.cols(), &YBlk, &YGrd);
     find_Y<<<YGrd, YBlk>>>(distance, distance_p, m_gpu, m_p, Y_gpu, Y_p, m.cols(), p.cols());
     cudaDeviceSynchronize();
-    cudaFree(m_gpu);
 
+    cudaFree(m_gpu);
     cudaFree(distance);
 
     Y.fromGpu(Y_gpu, Y.rows(), Y.cols(), Y_p);
