@@ -18,8 +18,9 @@ namespace GPU
             //     Y.col(j) = this->m.col(minCol);
             // }
 
+            // std::cout << this->m << std::endl;
             Y = compute_Y_w(m,new_p,Y);
-            std::cout << Y << std::endl;
+            // std::cout << Y << std::endl;
 
             double err = ICP::find_alignment(Y);
 
