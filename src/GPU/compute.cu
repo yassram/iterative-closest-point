@@ -96,7 +96,7 @@ __global__ void find_Y(double *distance, size_t distance_p,
     int minIdx = 0;
     for (int i = 1; i < xSize; i++) {
         // printf("> (%i, %d) : current=%lf vs %lf \n",
-               i, j, distance[minIdx + j * distance_p], distance[i + j*distance_p]);
+               // i, j, distance[minIdx + j * distance_p], distance[i + j*distance_p]);
         if (distance[minIdx + j*distance_p] > distance[i + j*distance_p]){
             minIdx = i;
             // printf("YES\n");
