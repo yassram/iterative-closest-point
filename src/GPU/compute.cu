@@ -126,8 +126,8 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
     dim3 YBlk, YGrd;
     YBlk = dim3(1, 32, 1);
 
-    int xBlocks = (int) std::ceil(((double)width) / xThreads);
-    int yBlocks = (int) std::ceil(((double)height) / yThreads);
+    int xBlocks = (int) std::ceil(1.0 / xThreads);
+    int yBlocks = (int) std::ceil(((double) p.cols()) / yThreads);
     YGrd = dim3(xBlocks, yBlocks, 1);
 
     // computeDim(1, p.cols(), &YBlk, &YGrd);
