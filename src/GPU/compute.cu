@@ -73,10 +73,10 @@ __global__ void compute_distance(double *m, size_t m_p, double *p, size_t p_p,
     double z = p[j + 2*p_p] - mz;
 
     distance_p = distance_p/sizeof(double);
-    distance[i + j * distance_p] = x*x + y*y + z*z;
+    distance[i + j*distance_p] = x*x + y*y + z*z;
 
-    printf("> (%d,%d) : dist = %lf (%lf, %lf, %lf) (%lf, %lf, %lf)\n",
-           i, j, distance[i + j * distance_p], p[j], p[j + p_p], p[j + 2*p_p], mx, my, mz);
+    // printf("> (%d,%d) : dist = %lf (%lf, %lf, %lf) (%lf, %lf, %lf)\n",
+    // i, j, distance[i + j * distance_p], p[j], p[j + p_p], p[j + 2*p_p], mx, my, mz);
 }
 
 
@@ -97,7 +97,7 @@ __global__ void find_Y(double *distance, size_t distance_p,
     int minIdx = 0;
     for (int i = 1; i < xSize; i++) {
         // printf("> (%i, %d) : current=%lf vs %lf \n",
-               // i, j, distance[minIdx + j * distance_p], distance[i + j*distance_p]);
+        // i, j, distance[minIdx + j * distance_p], distance[i + j*distance_p]);
         if (distance[minIdx + j*distance_p] > distance[i + j*distance_p]){
             minIdx = i;
             // printf("YES\n");
@@ -108,8 +108,8 @@ __global__ void find_Y(double *distance, size_t distance_p,
     double my = m[minIdx + m_p];
     double mz = m[minIdx + 2*m_p];
 
-     // printf("> (j = %d) : idx = %d| distMin = %lf | (%lf, %lf, %lf)\n",
-            // j, minIdx, distance[minIdx + j * distance_p], mx, my, mz);
+    // printf("> (j = %d) : idx = %d| distMin = %lf | (%lf, %lf, %lf)\n",
+    // j, minIdx, distance[minIdx + j * distance_p], mx, my, mz);
 
     Y[j] = mx;
     Y[j+ Y_p] = my;
@@ -122,14 +122,13 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
     double *p_gpu = p.toGpu(&p_p);
     double *Y_gpu = Y.toGpu(&Y_p);
 
-    dim3 distBlk, distGrd;
-    computeDim(m.cols(), 1, &distBlk, &distGrd);
 
     double *distance;
     size_t distance_p;
-
     cudaMallocPitch((void **) &distance, &distance_p, sizeof(double) * m.cols(), p.cols());
 
+    dim3 distBlk, distGrd;
+    computeDim(m.cols(), p.cols(), &distBlk, &distGrd);
     compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu, p_p, distance, distance_p, m.cols(), p.cols());
     cudaDeviceSynchronize();
 
@@ -137,11 +136,9 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
 
     dim3 YBlk, YGrd;
     YBlk = dim3(1, 32, 1);
-
     int xBlocks = 1;
     int yBlocks = (int) std::ceil(((double) p.cols()) / 32);
     YGrd = dim3(xBlocks, yBlocks, 1);
-
     // computeDim(1, p.cols(), &YBlk, &YGrd);
     find_Y<<<YGrd, YBlk>>>(distance, distance_p, m_gpu, m_p, Y_gpu, Y_p, m.cols(), p.cols());
     cudaDeviceSynchronize();
