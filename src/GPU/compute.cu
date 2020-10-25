@@ -103,12 +103,16 @@ __global__ void find_Y(double *distance, size_t distance_p,
         }
     }
 
-     // printf("> (%d) : dist = %lf \n",
-            // j, distance[minIdx + j * distance_p]);
+    double mx = m[j];
+    double my = m[j + m_p];
+    double mz = m[j + 2*m_p];
 
-    Y[j] = m[minIdx];
-    Y[j+ Y_p] = m[minIdx + m_p];
-    Y[j+ 2*Y_p] = m[minIdx + 2*m_p];
+     printf("> (j = %d) : distMin = %lf | (%lf, %lf, %lf)\n",
+            j, distance[minIdx + j * distance_p], mx, my, mz);
+
+    Y[j] = mx;
+    Y[j+ Y_p] = my;
+    Y[j+ 2*Y_p] = mz;
 }
 
 GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
