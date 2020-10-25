@@ -75,8 +75,8 @@ __global__ void compute_distance(double *m, size_t m_p, double *p, size_t p_p,
     distance_p = distance_p/sizeof(double);
     distance[i + j * distance_p] = x*x + y*y + z*z;
 
-    printf("> (%d,%d) : dist = %lf (%lf, %lf, %lf) (%lf, %lf, %lf)\n",
-           i, j, distance[i + j * distance_p], p[j], p[j + p_p], p[j + 2*p_p], mx, my, mz);
+    // printf("> (%d,%d) : dist = %lf (%lf, %lf, %lf) (%lf, %lf, %lf)\n",
+           // i, j, distance[i + j * distance_p], p[j], p[j + p_p], p[j + 2*p_p], mx, my, mz);
 }
 
 
@@ -95,16 +95,16 @@ __global__ void find_Y(double *distance, size_t distance_p,
 
     int minIdx = 0;
     for (int i = 1; i < xSize; i++) {
-        printf("> (%i, %d) : current=%lf vs %lf \n",
+        // printf("> (%i, %d) : current=%lf vs %lf \n",
                i, j, distance[minIdx + j * distance_p], distance[i + j*distance_p]);
         if (distance[minIdx + j*distance_p] > distance[i + j*distance_p]){
             minIdx = i;
-            printf("YES\n");
+            // printf("YES\n");
         }
     }
 
-     printf("> (%d) : dist = %lf \n",
-            j, distance[minIdx + j * distance_p]);
+     // printf("> (%d) : dist = %lf \n",
+            // j, distance[minIdx + j * distance_p]);
 
     Y[j] = m[minIdx];
     Y[j+ Y_p] = m[minIdx + m_p];
@@ -145,7 +145,7 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
     cudaFree(distance);
 
     Y.fromGpu(Y_gpu, Y.rows(), Y.cols(), Y_p);
-    std::cout << "cu: \n" << Y << "\n"<< std::endl;
+    // std::cout << "cu: \n" << Y << "\n"<< std::endl;
 
     cudaFree(Y_gpu);
     return Y;
