@@ -89,7 +89,7 @@ __global__ void find_Y(double *distance, size_t distance_p,
 
     int minIdx = 0;
     for (int i = 1; i < xSize; i++)
-        if (Y[minIdx + j*Y_p] > distance[i + j+distance_p])
+        if (distance[minIdx + j*distance_p] > distance[i + j+distance_p])
             minIdx = i;
 
     Y[j] = m[minIdx];
