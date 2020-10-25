@@ -10,11 +10,16 @@ namespace GPU
             std::cerr << "[ICP] iteration number " << i << " | ";
 
             Matrix Y{Matrix::Zero(this->dim, this->np)};
-            for (int j = 0; j < this->np; j++) {
-                Matrix pi {this->new_p.col(j)};
-                int minCol = compute_distance_w(this->m, pi);
-                Y.col(j) = this->m.col(minCol);
-            }
+            // int minCol = compute_distance_w(this->m, this->new_p, Y);
+
+            // for (int j = 0; j < this->np; j++) {
+            //     Matrix pi {this->new_p.col(j)};
+            //     int minCol = compute_distance_w(this->m, pi);
+            //     Y.col(j) = this->m.col(minCol);
+            // }
+
+            Y = compute_Y_w(m,new_p,Y);
+
             double err = ICP::find_alignment(Y);
 
             for (int j = 0; j < this->np; j++) {

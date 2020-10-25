@@ -54,11 +54,12 @@ void computeDim(unsigned width, unsigned height,
 }
 
 
-__global__ void compute_distance(double *m, size_t m_p, double *pi, size_t pi_p,
-                                 double *distance, int size){
+__global__ void compute_distance(double *m, size_t m_p, double *p, size_t p_p,
+                                 double *distance, distance_p,  int xSize, int ySize){
     int i = blockIdx.x*blockDim.x + threadIdx.x;
+    int j = blockIdx.y*blockDim.y + threadIdx.y;
 
-    if (i >= size)
+    if (i >= xSize || j >= ySize)
         return;
 
     m_p = m_p/sizeof(double);
@@ -66,48 +67,64 @@ __global__ void compute_distance(double *m, size_t m_p, double *pi, size_t pi_p,
     double my = m[i + m_p];
     double mz = m[i + 2*m_p];
 
-    pi_p = pi_p/sizeof(double);
-    double x = pi[0] - mx;
-    double y = pi[pi_p] - my;
-    double z = pi[2*pi_p] - mz;
+    p_p = p_p/sizeof(double);
+    double x = p[j] - mx;
+    double y = p[j + p_p] - my;
+    double z = p[j + 2*p_p] - mz;
 
-    distance[i] = x*x + y*y + z*z;
+    distance_p = distance_p/sizeof(double);
+    distance[i + j * distance_p] = x*x + y*y + z*z;
 }
 
-__global__ void find_min_distance(double *distance, int *minIdx, int size) {
-    *minIdx = 0;
-    for (int i = 1; i < size; i++)
-        if (distance[*minIdx] > distance[i])
-            *minIdx = i;
+__global__ void find_Y(double *distance, size_t distance_p,
+                                  double *m, size_t m_p, double *Y, size_t Y_p,
+                                  int xSize, int ySize) {
+    int j = blockIdx.y*blockDim.y + threadIdx.y;
+
+    if (j >= ySize)
+        return;
+
+    distance_p = distance_p/sizeof(double);
+    Y_p = Y_p / sizeof(double);
+
+    int minIdx = 0;
+    for (int i = 1; i < xSize; i++)
+        if (Y[minIdx + j*Y_p] > distance[i + j+distance_p])
+            minIdx = i;
+
+    Y[j] = m[minIdx];
+    Y[j+ Y_p] = m[minIdx + m_p];
+    Y[j+ 2*Y_p] = m[minIdx + 2*m_p];
 }
 
-int compute_distance_w(GPU::Matrix m, GPU::Matrix pi){
-    size_t m_p, pi_p;
+GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
+    size_t m_p, p_p, Y_p;
     double *m_gpu = m.toGpu(&m_p);
-    double *pi_gpu = pi.toGpu(&pi_p);
+    double *p_gpu = p.toGpu(&p_p);
+    double *Y_gpu = Y.toGpu(&Y_p);
 
     dim3 distBlk, distGrd;
     computeDim(m.cols(), 1, &distBlk, &distGrd);
 
     double *distance;
-    cudaMalloc((void **) &distance, sizeof(double)*m.cols());
-    compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, pi_gpu, pi_p, distance, m.cols());
+    size_t distance_p;
+
+    cudaMallocPitch((void **) &d_x, &distance_p, sizeof(double) * m.cols(), p.cols());
+    compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu, p_p, distance, distance_p, m.cols(), p.cols());
     cudaDeviceSynchronize();
 
     cudaFree(m_gpu);
-    cudaFree(pi_gpu);
+    cudaFree(p_gpu);
 
-    int *minIdx;
-    cudaMalloc((void **) &minIdx, sizeof(int));
-    find_min_distance<<<1, 1>>>(distance, minIdx, m.cols());
+    dim3 YBlk, YGrd;
+    computeDim(1, p.cols(), &YBlk, &YGrd);
+    find_Y<<<YGrd, YBlk>>>(distance, distance_p, m_gpu, m_p, Y_gpu, Y_p, m.cols(), p.cols());
     cudaDeviceSynchronize();
 
     cudaFree(distance);
 
-    int h_minIdx = 0;
-    cudaMemcpy(&h_minIdx, minIdx, sizeof(int),
-               cudaMemcpyDeviceToHost);
+    Y.fromGpu(Y_gpu, Y.rows(), Y.cols(), Y_p);
 
-    cudaFree(minIdx);
-    return h_minIdx;
+    cudaFree(Y_gpu);
+    return Y;
 }

@@ -61,4 +61,4 @@ namespace GPU
     };
 } // namespace GPU
 
-int compute_distance_w(GPU::Matrix m, GPU::Matrix pi);
+GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix pi, GPU::Matrix Y);
