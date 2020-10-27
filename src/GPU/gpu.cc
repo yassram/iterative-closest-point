@@ -10,6 +10,9 @@ namespace GPU
             std::cerr << "[ICP] iteration number " << i << " | ";
 
             Matrix Y{Matrix::Zero(this->dim, this->np)};
+
+            compute_Y_w(m,new_p,Y);
+
             double err = ICP::find_alignment(Y);
 
             Matrix sr {this->s * this->r};
