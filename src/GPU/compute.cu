@@ -195,7 +195,7 @@ double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p, bool in_place,
                                sr_p, t_p, err_p, p.cols());
     cudaDeviceSynchronize();
 
-    if (!in_place)
+    if (in_place)
         p.fromGpu(p_gpu, p.rows(), p.cols(), p_p);
 
     cudaFree(p_gpu);
