@@ -267,6 +267,17 @@ __global__ void y_p_norm(const double *y, const double *p,
     }
 }
 
+unsigned int powerizer(unsigned int x)
+{
+    --x;
+    x |= x >> 1;
+    x |= x >> 2;
+    x |= x >> 4;
+    x |= x >> 8;
+    x |= x >> 16;
+    return ++x;
+}
+
 void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int size_arr, double &d_caps, double &sp)
 {
     size_t y_p, p_p;
