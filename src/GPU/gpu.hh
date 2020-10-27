@@ -66,3 +66,4 @@ double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p, bool in_place,
                      const GPU::Matrix &sr, const GPU::Matrix &t);
 
 GPU::Matrix substract_col_w(const GPU::Matrix &M, const GPU::Matrix &m);
+void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int size_arr, double &d_caps, double &sp);
