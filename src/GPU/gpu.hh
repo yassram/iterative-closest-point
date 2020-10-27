@@ -15,7 +15,7 @@ namespace GPU
     {
     public:
         void fromGpu(double *gpu_rep, unsigned row, unsigned col, size_t pitch);
-        double *toGpu(size_t *pitch);
+        double *toGpu(size_t *pitch) const;
     };
 
     class ICP
@@ -61,6 +61,6 @@ namespace GPU
     };
 } // namespace GPU
 
-GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix pi, GPU::Matrix Y);
-double compute_err_w(GPU::Matrix Y, GPU::Matrix *p,
-                                     GPU::Matrix sr, GPU::Matrix t);
+void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &pi, GPU::Matrix &Y);
+double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p,
+                                     const GPU::Matrix &sr, const GPU::Matrix &t);

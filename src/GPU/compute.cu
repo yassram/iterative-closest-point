@@ -17,7 +17,7 @@ namespace GPU {
         std::free(h_d);
     }
 
-    double *Matrix::toGpu(size_t *pitch) {
+    double *Matrix::toGpu(size_t *pitch) const {
         unsigned r = this->rows();
         unsigned c = this->cols();
 
@@ -116,7 +116,7 @@ __global__ void find_Y(double *distance, size_t distance_p,
     Y[j+ 2*Y_p] = mz;
 }
 
-GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
+void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y){
     size_t m_p, p_p, Y_p;
     double *m_gpu = m.toGpu(&m_p);
     double *p_gpu = p.toGpu(&p_p);
@@ -151,17 +151,17 @@ GPU::Matrix compute_Y_w(GPU::Matrix m, GPU::Matrix p, GPU::Matrix Y){
     // std::cout  << m << "\n"<< std::endl;
 
     cudaFree(Y_gpu);
-    return Y;
+    //return Y;
 }
 
 __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double *t_gpu,
                 size_t Y_p, size_t p_p, size_t sr_p, size_t t_p, unsigned int size)
 {
     int i = blockIdx.x*blockDim.x + threadIdx.x;
-
+    int j = blockIdx.y*blockDim.y + threadIdx.y;
     if (i >= size)
         return;
-
+    printf("i: %d, j: %d\n", i, j);
     Y_p = Y_p / sizeof(double);
     p_p = p_p / sizeof(double);
     sr_p = sr_p / sizeof(double);
@@ -181,33 +181,37 @@ __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double
 }
 
 
-//std::tuple<double, GPU::Matrix> 
-double compute_err_w(GPU::Matrix Y, GPU::Matrix *p,
-                                    GPU::Matrix sr, GPU::Matrix t)
+//std::tuple<double, GPU::Matrix>
+double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p,
+                                    const GPU::Matrix &sr, const GPU::Matrix &t)
 {
     size_t p_p, sr_p, t_p, Y_p;
-    double *p_gpu = p->toGpu(&p_p);
+    double *p_gpu = p.toGpu(&p_p);
     double *sr_gpu = sr.toGpu(&sr_p);
     double *t_gpu = t.toGpu(&t_p);
     double *Y_gpu =Y.toGpu(&Y_p);
 
 
-    dim3 distBlk, distGrd;
-    computeDim(p->cols(), 1, &distBlk, &distGrd);
-    compute_err<<<distGrd,distBlk>>>(Y_gpu, p_gpu, sr_gpu, t_gpu, Y_p, p_p,
-                                                        sr_p, t_p, p->cols());
+
+    dim3 PBlk, PGrd;
+    PBlk = dim3(32, 1, 1);
+    int xBlocks = (int) std::ceil(((double) p.cols()) / 32);
+    int yBlocks = 1;
+    PGrd = dim3(xBlocks, yBlocks, 1);
+    compute_err<<<PGrd,PBlk>>>(Y_gpu, p_gpu, sr_gpu, t_gpu, Y_p, p_p,
+                                                        sr_p, t_p, p.cols());
     cudaDeviceSynchronize();
 
-    p->fromGpu(p_gpu, p->rows(), p->cols(), p_p);
+    p.fromGpu(p_gpu, p.rows(), p.cols(), p_p);
     cudaFree(p_gpu);
     cudaFree(sr_gpu);
     cudaFree(t_gpu);
 
-    //on réutilise Y pr calculer l'erreur
-    Y.fromGpu(Y_gpu, Y.rows(), Y.cols(), Y_p);
+    GPU::Matrix e{MatrixXd{Y.rows(), Y.cols()}};
+    e.fromGpu(Y_gpu, Y.rows(), Y.cols(), Y_p);
     cudaFree(Y_gpu);
 
-    double err = (Y.transpose() * Y)(0);
+    double err = (e.transpose() * e)(0);
     return err;
 }
 

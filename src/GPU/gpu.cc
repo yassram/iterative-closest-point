@@ -19,21 +19,21 @@ namespace GPU
             // }
 
             // std::cout << this->m << std::endl;
-            Y = compute_Y_w(m,new_p,Y);
+            compute_Y_w(m,new_p,Y);
             // std::cout << Y << std::endl;
 
             double err = ICP::find_alignment(Y);
-
+/*
             for (int j = 0; j < this->np; j++) {
                 this->new_p.col(j) = (this->s * this->r) * this->new_p.col(j) + this->t;
 
                 Matrix e {Y.col(j) - this->new_p.col(j)};
                 err = err + (e.transpose() * e)(0);
             }
+*/
 
-
-            //Matrix sr {s*r};
-            //err += compute_err_w(Y, &new_p, sr, t);
+            Matrix sr {s*r};
+            err += compute_err_w(Y, new_p, sr, t);
 
             err /= this->np;
             std::cerr << "err = " << err << std::endl;
