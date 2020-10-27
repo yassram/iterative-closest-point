@@ -16,7 +16,7 @@ namespace GPU
             double err = ICP::find_alignment(Y);
 
             Matrix sr {this->s * this->r};
-            err += compute_err_w(Y, this->new_p, sr, this->t);
+            err += compute_err_w(Y, this->new_p, true, sr, this->t);
 
             err /= this->np;
             std::cerr << "err = " << err << std::endl;
@@ -60,11 +60,11 @@ namespace GPU
             std::cerr << "Need at least 4 point pairs\n";
         }
 
-        auto mu_p = this->new_p.rowwise().mean();
-        auto mu_y = y.rowwise().mean();
+        Matrix mu_p{this->new_p.rowwise().mean()};
+        Matrix mu_y{y.rowwise().mean()};
 
-        Matrix p_prime = {this->new_p.colwise() - mu_p};
-        Matrix y_prime = {y.colwise() - mu_y};
+        Matrix p_prime = substract_col_w(this->new_p, mu_p);
+        Matrix y_prime = substract_col_w(y, mu_y);
 
         auto px = p_prime.row(0);
         auto py = p_prime.row(1);
@@ -131,11 +131,13 @@ namespace GPU
         this->s = sqrt(d_caps / sp);
         this->t = {mu_y - this->s * r * mu_p};
 
-        auto err = 0.;
-        for (auto i = 0; i < n_new_p; i++) {
-            auto d = y.col(i) - ((this->s * this->r) * this->new_p.col(i) + this->t);
-            err += (d.transpose() * d)(0);
-        }
+        Matrix sr {this->s * this->r};
+        double err = compute_err_w(y, this->new_p, false, sr, this->t);
+
+        // for (auto i = 0; i < n_new_p; i++) {
+        //     auto d = y.col(i) - ((this->s * this->r) * this->new_p.col(i) + this->t);
+        //     err += (d.transpose() * d)(0);
+        // }
 
         return err;
     }
