@@ -110,7 +110,7 @@ namespace GPU
         //     d_caps = d_caps + (y_prime_view.transpose() * y_prime_view)(0);
         //     sp = sp + (p_prime_view.transpose() * p_prime_view)(0);
         // }
-        void y_p_norm_wrapper(y_prime, p_prime, n_new_p, d_caps, sp);
+        y_p_norm_wrapper(y_prime, p_prime, n_new_p, d_caps, sp);
 
 
         this->s = sqrt(d_caps / sp);
