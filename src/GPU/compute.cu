@@ -174,13 +174,13 @@ __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double
     double ty = t_gpu[t_p];
     double tz = t_gpu[2*t_p];
 
-    double px = sr_gpu[0] * px + sr_gpu[1] * py + sr_gpu[2] * pz + tx;
-    double py = sr_gpu[sr_p] * px + sr_gpu[1 + sr_p] * py + sr_gpu[2 + sr_p] * pz + ty;
-    double pz = sr_gpu[2 * sr_p] * px + sr_gpu[1 + 2*sr_p] * py + sr_gpu[2 + 2*sr_p] * pz + tz;
+    double npx = sr_gpu[0] * px + sr_gpu[1] * py + sr_gpu[2] * pz + tx;
+    double npy = sr_gpu[sr_p] * px + sr_gpu[1 + sr_p] * py + sr_gpu[2 + sr_p] * pz + ty;
+    double npz = sr_gpu[2 * sr_p] * px + sr_gpu[1 + 2*sr_p] * py + sr_gpu[2 + 2*sr_p] * pz + tz;
 
-    Y_gpu[i] = Y_gpu[i] - px;
-    Y_gpu[i + Y_p] = Y_gpu[i + Y_p] - py;
-    Y_gpu[i + 2*Y_p] = Y_gpu[i + 2*Y_p] - pz;
+    Y_gpu[i] = Y_gpu[i] - npx;
+    Y_gpu[i + Y_p] = Y_gpu[i + Y_p] - npy;
+    Y_gpu[i + 2*Y_p] = Y_gpu[i + 2*Y_p] - npz;
 }
 
 
