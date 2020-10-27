@@ -161,6 +161,7 @@ __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double
     int j = blockIdx.y*blockDim.y + threadIdx.y;
     if (i >= size)
         return;
+    printf("%d,%d", i, j);
     Y_p = Y_p / sizeof(double);
     p_p = p_p / sizeof(double);
     sr_p = sr_p / sizeof(double);
