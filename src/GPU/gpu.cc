@@ -61,7 +61,7 @@ namespace GPU
         }
 
         Matrix mu_p{this->new_p.rowwise().mean()};
-        Matrix mu_y{y.rowwise().mean().transposeInPlace()};
+        Matrix mu_y{y.rowwise().mean().transpose()};
 
         Matrix p_prime = substract_col_w(this->new_p, mu_p);
         Matrix y_prime = substract_col_w(y, mu_y);
