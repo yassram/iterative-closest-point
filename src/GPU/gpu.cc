@@ -130,13 +130,13 @@ namespace GPU
         auto sp = 0.;
         auto d_caps = 0.;
 
-        for (auto i = 0; i < n_new_p; i++) {
-            auto y_prime_view = y_prime.col(i);
-            auto p_prime_view = p_prime.col(i);
-            d_caps = d_caps + (y_prime_view.transpose() * y_prime_view)(0);
-            sp = sp + (p_prime_view.transpose() * p_prime_view)(0);
-        }
-        // y_p_norm_wrapper(y_prime, p_prime, n_new_p, d_caps, sp);
+        // for (auto i = 0; i < n_new_p; i++) {
+        //     auto y_prime_view = y_prime.col(i);
+        //     auto p_prime_view = p_prime.col(i);
+        //     d_caps = d_caps + (y_prime_view.transpose() * y_prime_view)(0);
+        //     sp = sp + (p_prime_view.transpose() * p_prime_view)(0);
+        // }
+        y_p_norm_wrapper(y_prime, p_prime, n_new_p, d_caps, sp);
 
         this->s = sqrt(d_caps / sp);
         this->t = {mu_y - this->s * r * mu_p};
