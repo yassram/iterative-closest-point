@@ -62,5 +62,5 @@ namespace GPU
 } // namespace GPU
 
 void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &pi, GPU::Matrix &Y);
-double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p,
-                                     const GPU::Matrix &sr, const GPU::Matrix &t);
+double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p, bool in_place,
+                     const GPU::Matrix &sr, const GPU::Matrix &t);

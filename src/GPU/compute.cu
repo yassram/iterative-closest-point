@@ -173,7 +173,7 @@ __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double
 }
 
 
-double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p,
+double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p, bool in_place,
                      const GPU::Matrix &sr, const GPU::Matrix &t)
 {
     size_t p_p, sr_p, t_p, Y_p;
@@ -195,7 +195,9 @@ double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p,
                                sr_p, t_p, err_p, p.cols());
     cudaDeviceSynchronize();
 
-    p.fromGpu(p_gpu, p.rows(), p.cols(), p_p);
+    if (!in_place)
+        p.fromGpu(p_gpu, p.rows(), p.cols(), p_p);
+
     cudaFree(p_gpu);
     cudaFree(sr_gpu);
     cudaFree(t_gpu);
