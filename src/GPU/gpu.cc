@@ -66,14 +66,14 @@ namespace GPU
         Matrix p_prime = substract_col_w(this->new_p, mu_p);
         Matrix y_prime = substract_col_w(y, mu_y);
 
-        MatrixXd s = p_prime * y_prime.transpose(); //multiplication matricielle
+        MatrixXd s{p_prime * y_prime.transpose()}; //multiplication matricielle
 
         MatrixXd n_matrix{4, 4};
 
-        n_matrix << s[0,0] + s[1,1] + s[2,2], s[1,2] - s[2,1], -1 * s[0,2] + s[2,0], s[0,1] - s[1,0],
-            -1 * s[2,1] + s[1,2], s[0,0] - s[2,2] - s[1,1], s[0,1] + s[1,0], s[0,2] + s[2,0],
-            s[2,0] - s[0, 2], s[1,0] + s[0,1], s[1,1] - s[2,2] - s[0,0], s[1,2] + s[2,1],
-            -1 * s[1,0] + s[0,1], s[2,0] + s[0, 2], s[2,1] + s[1,2], s[2,2] - s[1,1] - s[0,0];
+        n_matrix << s(0,0) + s[(,1])+ s(2,2), s(1,2) - s(2,1), -1 * s(0,2) + s(2,0), s(0,1) - s(1,0),
+            -1 * s(2,1) + s(1,2), s(0,0) - s(2,2) - s(1,1), s(0,1) + s(1,0), s(0,2) + s(2,0),
+            s(2,0) - s(0, )], s(1,0) + s(0,1), s(1,1) - s(2,2) - s(0,0), s(1,2) + s(2,1),
+            -1 * s(1,0) + s(0,1), s(2,0) + s(0, )], s(2,1) + s(1,2), s(2,2) - s(1,1) - s(0,0);
 
         // auto px = p_prime.row(0);
         // auto py = p_prime.row(1);
