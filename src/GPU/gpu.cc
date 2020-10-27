@@ -60,11 +60,11 @@ namespace GPU
             std::cerr << "Need at least 4 point pairs\n";
         }
 
-        auto mu_p = this->new_p.rowwise().mean();
-        auto mu_y = y.rowwise().mean();
+        Matrix mu_p{this->new_p.rowwise().mean()};
+        Matrix mu_y{y.rowwise().mean()};
 
-        Matrix p_prime = {this->new_p.colwise() - mu_p};
-        Matrix y_prime = {y.colwise() - mu_y};
+        Matrix p_prime = substract_col_w(this->new_p, mu_p);
+        Matrix y_prime = substract_col_w(y, mu_y);
 
         auto px = p_prime.row(0);
         auto py = p_prime.row(1);
