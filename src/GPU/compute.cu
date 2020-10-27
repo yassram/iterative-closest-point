@@ -179,6 +179,10 @@ __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double
     double npy = sr_gpu[sr_p] * px + sr_gpu[1 + sr_p] * py + sr_gpu[2 + sr_p] * pz + ty;
     double npz = sr_gpu[2 * sr_p] * px + sr_gpu[1 + 2*sr_p] * py + sr_gpu[2 + 2*sr_p] * pz + tz;
 
+    p_gpu[i] = npx;
+    p_gpu[i + p_p] = npy;
+    p_gpu[i + 2*p_p] = npz;
+
     Y_gpu[i] = Y_gpu[i] - npx;
     Y_gpu[i + Y_p] = Y_gpu[i + Y_p] - npy;
     Y_gpu[i + 2*Y_p] = Y_gpu[i + 2*Y_p] - npz;
