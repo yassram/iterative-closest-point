@@ -252,17 +252,22 @@ GPU::Matrix substract_col_w(const GPU::Matrix &M, const GPU::Matrix &m)
 __global__ void y_p_norm(const double *y, const double *p,
                          double *out_p, double *out_y,
                          const unsigned int y_p,
-                         const unsigned int p_p)
+                         const unsigned int p_p,
+                         const unsigned int size_arr)
 {
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < y_p)
+
+    y_p = y_p / sizeof(double);
+    p_p = p_p / sizeof(double);
+
+    if (i < size_arr)
     {
         double col[3];
         for (unsigned int j = 0; j < 3; j++)
             col[j] = y[i + j * y_p];
         out_y[i] = col[0] * col[0] + col[1] * col[1] + col[2] * col[2];
     }
-    if (i < y_p)
+    if (i < size_arr)
     {
         for (unsigned int j = 0; j < 3; j++)
             col[j] = p[i + j * p_p];
@@ -297,7 +302,7 @@ void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int s
     double *out_y;
     cudaMalloc(&out_y, sizeof(double) * size_arr);
 
-    y_p_norm<<<grid_sz, block_sz, smem_sz>>>(y_gpu, p_gpu, out_p, out_y, y_p, p_p);
+    y_p_norm<<<grid_sz, block_sz, smem_sz>>>(y_gpu, p_gpu, out_p, out_y, y_p, p_p, size_arr);
     cudaFree(p_gpu);
     cudaFree(y_gpu);
 
