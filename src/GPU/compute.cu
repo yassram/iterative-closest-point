@@ -155,35 +155,38 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y){
 }
 
 __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double *t_gpu,
-                size_t Y_p, size_t p_p, size_t sr_p, size_t t_p, unsigned int size)
+                            size_t Y_p, size_t p_p, size_t sr_p, size_t t_p, unsigned int size)
 {
     int i = blockIdx.x*blockDim.x + threadIdx.x;
     int j = blockIdx.y*blockDim.y + threadIdx.y;
     if (i >= size)
         return;
-    printf("i: %d, j: %d\n", i, j);
     Y_p = Y_p / sizeof(double);
     p_p = p_p / sizeof(double);
     sr_p = sr_p / sizeof(double);
     t_p = t_p / sizeof(double);
 
-    double px = sr_gpu[0] * p_gpu[i] + sr_gpu[1] * p_gpu[i + p_p] + sr_gpu[2] * p_gpu[i + 2* p_p];
-    double py = sr_gpu[sr_p] * p_gpu[i] + sr_gpu[1 + sr_p] * p_gpu[i + p_p] + sr_gpu[2 + sr_p] * p_gpu[i + 2* p_p];
-    double pz = sr_gpu[2 * sr_p] * p_gpu[i] + sr_gpu[1 + 2*sr_p] * p_gpu[i + p_p] + sr_gpu[2 + 2*sr_p] * p_gpu[i + 2 * p_p];
+    double px = p_gpu[i];
+    double py = p_gpu[i + p_p];
+    double pz = p_gpu[i + 2*p_p];
 
-    p_gpu[i] = px + t_gpu[0];
-    p_gpu[i + p_p] = py + t_gpu[t_p];
-    p_gpu[i + 2*p_p] = pz + t_gpu[2*t_p];
+    double tx = t_gpu[0];
+    double ty = t_gpu[t_p];
+    double tz = t_gpu[2*t_p];
 
-    Y_gpu[i] = Y_gpu[i] - p_gpu[i];
-    Y_gpu[i + Y_p] = Y_gpu[i + Y_p] - p_gpu[i + p_p];
-    Y_gpu[i + 2*Y_p] = Y_gpu[i + 2*Y_p] - p_gpu[i + 2*p_p];
+    double px = sr_gpu[0] * px + sr_gpu[1] * py + sr_gpu[2] * pz + tx;
+    double py = sr_gpu[sr_p] * px + sr_gpu[1 + sr_p] * py + sr_gpu[2 + sr_p] * pz + ty;
+    double pz = sr_gpu[2 * sr_p] * px + sr_gpu[1 + 2*sr_p] * py + sr_gpu[2 + 2*sr_p] * pz + tz;
+
+    Y_gpu[i] = Y_gpu[i] - px;
+    Y_gpu[i + Y_p] = Y_gpu[i + Y_p] - py;
+    Y_gpu[i + 2*Y_p] = Y_gpu[i + 2*Y_p] - pz;
 }
 
 
 //std::tuple<double, GPU::Matrix>
 double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p,
-                                    const GPU::Matrix &sr, const GPU::Matrix &t)
+                     const GPU::Matrix &sr, const GPU::Matrix &t)
 {
     size_t p_p, sr_p, t_p, Y_p;
     double *p_gpu = p.toGpu(&p_p);
@@ -199,7 +202,7 @@ double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p,
     int yBlocks = 1;
     PGrd = dim3(xBlocks, yBlocks, 1);
     compute_err<<<PGrd,PBlk>>>(Y_gpu, p_gpu, sr_gpu, t_gpu, Y_p, p_p,
-                                                        sr_p, t_p, p.cols());
+                               sr_p, t_p, p.cols());
     cudaDeviceSynchronize();
 
     p.fromGpu(p_gpu, p.rows(), p.cols(), p_p);
@@ -214,5 +217,3 @@ double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p,
     double err = (e.transpose() * e)(0);
     return err;
 }
-
-
