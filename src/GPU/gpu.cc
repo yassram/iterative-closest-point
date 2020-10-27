@@ -66,7 +66,7 @@ namespace GPU
         Matrix p_prime = substract_col_w(this->new_p, mu_p);
         Matrix y_prime = substract_col_w(y, mu_y);
 
-        Matrix s = p_prime * y_prime.tranpose(); //multiplication matricielle
+        Matrix s = p_prime * y_prime.transpose(); //multiplication matricielle
 
         MatrixXd n_matrix{4, 4};
 
