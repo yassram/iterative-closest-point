@@ -249,32 +249,30 @@ GPU::Matrix substract_col_w(const GPU::Matrix &M, const GPU::Matrix &m)
     return tmp;
 }
 
-__global__ void y_p_norm(const double *y, const double *p,
-                         double *out_p, double *out_y,
-                         const unsigned int y_p,
-                         const unsigned int p_p,
-                         const unsigned int size_arr)
+__global__ void y_p_norm(const double *y_gpu, const double *p_gpu,
+                         double *d_gpu, double *sp_gpu,
+                         size_t y_p,
+                         size_t p_p,
+                         size_t d_p,
+                         size_t sp_p,
+                         const int size)
 {
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
 
+    if (i >= size)
+        return;
+
     y_p = y_p / sizeof(double);
     p_p = p_p / sizeof(double);
+    d_p = d_p / sizeof(double);
+    sp_p = sp_p / sizeof(double);
 
-    if (i < size_arr)
-    {
-        double col[3];
-        for (unsigned int j = 0; j < 3; j++)
-            col[j] = y[i + j * y_p];
-        out_y[i] = col[0] * col[0] + col[1] * col[1] + col[2] * col[2];
-    }
-    if (i < size_arr)
-    {
-        for (unsigned int j = 0; j < 3; j++)
-            col[j] = p[i + j * p_p];
-        out_p[i] = col[0] * col[0] + col[1] * col[1] + col[2] * col[2];
-    }
+    d_gpu[i] = y_gpu[i] * y_gpu[i] + y_gpu[i + y_p] * y_gpu[i + y_p]
+                                        + y_gpu[i + 2*y_p] * y_gpu[i + 2*y_p];
+    sp_gpu[i] = p_gpu[i] * p_gpu[i] + p_gpu[i + p_p] * p_gpu[i + p_p]
+                                        + p_gpu[i + 2*p_p] * p_gpu[i + 2*p_p];
 }
-
+/*
 unsigned int powerizer(unsigned int x)
 {
     --x;
@@ -285,7 +283,39 @@ unsigned int powerizer(unsigned int x)
     x |= x >> 16;
     return ++x;
 }
+*/
+void y_p_norm_w(const GPU::Matrix &y, const GPU::Matrix &p, size_t size_arr,
+                                                    double &d_caps, double &sp)
+{
+    size_t y_p, p_p, out_sp_p, out_d_p;
+    double *y_gpu = y.toGpu(&y_p);
+    double *p_gpu = p.toGpu(&p_p);
 
+    GPU::Matrix out_d{MatrixXd{1, size_arr}};
+    GPU::Matrix out_sp{MatrixXd{1, size_arr}};
+
+    double *d_gpu = out_d.toGpu(&out_d_p);
+    double *sp_gpu = out_sp.toGpu(&out_sp_p);
+
+    dim3 PBlk, PGrd;
+    PBlk = dim3(32, 1, 1);
+    int xBlocks = (int)std::ceil(((double) size_arr) / 32);
+    int yBlocks = 1;
+    PGrd = dim3(xBlocks, yBlocks, 1);
+    y_p_norm<<<PGrd, PBlk>>>(y_gpu, p_gpu, d_gpu, sp_gpu, y_p, p_p, out_d_p,
+                                                            out_sp_p, size_arr);
+    cudaFree(p_gpu);
+    cudaFree(y_gpu);
+
+    out_d.fromGpu(d_gpu, 1, out_d.cols(), out_d_p);
+    out_sp.fromGpu(sp_gpu, 1, out_sp.cols(), out_sp_p);
+    cudaFree(d_gpu);
+    cudaFree(sp_gpu);
+
+    d_caps = out_d.sum();
+    sp = out_sp.sum();
+}
+/*
 void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int size_arr, double &d_caps, double &sp)
 {
     size_t y_p, p_p;
@@ -322,4 +352,4 @@ void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int s
     }
     free(r_p);
     free(r_y);
-}
+}*/
