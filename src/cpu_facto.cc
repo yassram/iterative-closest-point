@@ -4,16 +4,7 @@
 
 namespace CPU
 {
-    struct closest_matrix_params
-    {
-        unsigned int dim;
-        unsigned int np;
-        unsigned int nm;
-        const MatrixXd &p;
-        const MatrixXd &m;
-    };
-
-    MatrixXd closest_matrix(const struct closest_matrix_params pa)
+    MatrixXd closest_matrix(struct closest_matrix_params pa)
     {
         MatrixXd res = MatrixXd::Zero(pa.dim, pa.np);
 
@@ -37,21 +28,13 @@ namespace CPU
         return res;
     }
 
-    struct err_compute_params
-    {
-        unsigned int np;
-        MatrixXd &p;
-        const MatrixXd &sr;
-        const MatrixXd &t;
-        const MatrixXd &Y;
-    };
-
     double err_compute(struct err_compute_params pa)
     {
         double err{};
+        auto sr = pa.s * pa.r;
         for (int j = 0; j < pa.np; j++)
         {
-            pa.p.col(j) = (pa.sr) * pa.p.col(j) + pa.t;
+            pa.p.col(j) = sr * pa.p.col(j) + pa.t;
             MatrixXd e = pa.Y.col(j) - pa.p.col(j);
             err = err + (e.transpose() * e)(0);
         }
@@ -64,18 +47,14 @@ namespace CPU
         for (int i = 0; i < this->max_iter; i++)
         {
             std::cerr << "[ICP] iteration number " << i << " | ";
-            struct closest_matrix_params cmp
-            {
-                this->dim, this->np, this->nm, this->new_p, this->m
-            };
-            MatrixXd Y = closest_matrix(cmp);
+
+            MatrixXd Y = closest_matrix(get_closest_matrix_params());
 
             double err = ICP::find_alignment(Y);
 
-            MatrixXd sr{this->s * this->r};
             struct err_compute_params ecp
             {
-                this->np, this->new_p, sr, this->t, Y
+                this->np, this->new_p, this->s, this->r, this->t, Y
             };
             err += err_compute(ecp);
 
@@ -121,21 +100,13 @@ namespace CPU
         return 0;
     }
 
-    struct err_compute_alignment_params
-    {
-        unsigned int np;
-        const MatrixXd &p;
-        const MatrixXd &sr;
-        const MatrixXd &t;
-        const MatrixXd &y;
-    };
-
     double err_compute_alignment(struct err_compute_alignment_params pa)
     {
         double err{};
+        auto sr = pa.s * pa.r;
         for (int j = 0; j < pa.np; j++)
         {
-            auto d = pa.y.col(j) - ((pa.sr) * pa.p.col(j) + pa.t);
+            auto d = pa.y.col(j) - (sr * pa.p.col(j) + pa.t);
             err += (d.transpose() * d)(0);
         }
         return err;
@@ -207,10 +178,10 @@ namespace CPU
         this->s = sqrt(d_caps / sp);
         MatrixXd sr{this->r * this->s};
         this->t = mu_y - sr * mu_p;
-        
+
         struct err_compute_alignment_params ecap
         {
-         this->np, this->new_p, sr, this->t, y
+         this->np, this->new_p, this->s, this->r, this->t, y
         };
 
         return err_compute_alignment(ecap);
