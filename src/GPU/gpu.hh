@@ -3,19 +3,25 @@
 #include <Eigen/Eigenvalues>
 #include "compute.hh"
 
-using Eigen::MatrixXd;
 using Eigen::ArrayXd;
-using Eigen::Vector3d;
 using Eigen::MatrixXcd;
-
+using Eigen::MatrixXd;
+using Eigen::Vector3d;
 
 namespace GPU
 {
-    class Matrix: public MatrixXd
+    class Matrix : public MatrixXd
     {
     public:
         void fromGpu(double *gpu_rep, unsigned row, unsigned col, size_t pitch);
         double *toGpu(size_t *pitch) const;
+    };
+
+    struct gpu_closest_matrix_params
+    {
+        const Matrix &p;
+        const Matrix &m;
+        Matrix &y;
     };
 
     class ICP
@@ -35,8 +41,21 @@ namespace GPU
             this->t = {Matrix::Zero(m_.rows(), 1)};
         }
 
+        struct gpu_closest_matrix_params get_closest_matrix_params(Matrix &Y)
+        {
+            struct gpu_closest_matrix_params cmp
+            {
+                new_p, m, Y
+            };
+            return cmp;
+        }
+
+        double getDim() {return dim;}
+        double getNp() {return np;}
+
         ~ICP()
-        {}
+        {
+        }
 
         void find_corresponding();
         double find_alignment(Matrix y);

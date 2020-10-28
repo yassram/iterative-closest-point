@@ -251,18 +251,18 @@ GPU::Matrix substract_col_w(const GPU::Matrix &M, const GPU::Matrix &m)
 
 __global__ void y_p_norm(const double *y, const double *p,
                          double *out_p, double *out_y,
-                         const unsigned int y_p,
-                         const unsigned int p_p,
+                         const unsigned int y_p_,
+                         const unsigned int p_p_,
                          const unsigned int size_arr)
 {
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
 
-    y_p = y_p / sizeof(double);
-    p_p = p_p / sizeof(double);
+    unsigned int y_p = y_p_ / sizeof(double);
+    unsigned int p_p = p_p_ / sizeof(double);
 
+    double col[3];
     if (i < size_arr)
     {
-        double col[3];
         for (unsigned int j = 0; j < 3; j++)
             col[j] = y[i + j * y_p];
         out_y[i] = col[0] * col[0] + col[1] * col[1] + col[2] * col[2];
