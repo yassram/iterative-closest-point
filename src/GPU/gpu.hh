@@ -24,6 +24,15 @@ namespace GPU
         Matrix &y;
     };
 
+    struct gpu_err_compute_params
+{
+    const Matrix &Y;
+    Matrix &p;
+    bool s;
+    const Matrix sr;
+    const Matrix &t;
+};
+
     class ICP
     {
     public:
@@ -46,6 +55,14 @@ namespace GPU
             struct gpu_closest_matrix_params cmp
             {
                 new_p, m, Y
+            };
+            return cmp;
+        }
+        struct gpu_err_compute_params get_err_compute_params(Matrix &Y, bool s)
+        {
+            struct gpu_err_compute_params cmp
+            {
+                Y, new_p, s, s*r, t
             };
             return cmp;
         }
