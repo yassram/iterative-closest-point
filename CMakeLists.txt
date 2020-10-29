@@ -11,10 +11,10 @@ GIT_REPOSITORY https://github.com/google/benchmark.git
 GIT_TAG origin/master
 )
 
-FetchContent_Declare(
-eigen
-URL https://gitlab.com/libeigen/eigen/-/archive/master/eigen-master.tar.gz
-)
+#FetchContent_Declare(
+#eigen
+#URL https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.gz
+#)
 
 # if (NOT GoogleBenchmark_POPULATED)
 #     FetchContent_Populate(GoogleBenchmark)
@@ -25,8 +25,8 @@ URL https://gitlab.com/libeigen/eigen/-/archive/master/eigen-master.tar.gz
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "FromGtest")
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "FromGtest")
 FetchContent_MakeAvailable(googlebenchmark)
-
-FetchContent_MakeAvailable(eigen)
+add_subdirectory(lib)
+#FetchContent_MakeAvailable(eigen)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 set(CMAKE_CXX_STANDARD 17)
