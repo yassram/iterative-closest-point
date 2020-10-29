@@ -104,14 +104,29 @@ MatrixXd cpu_load_matrix(const char *filename, double min_coord[3],
 //matrix 3,n du coup
 void write_matrix(GPU::Matrix matrix)
 {
-    auto matrix_t = matrix.transpose();
+    auto matrix_tmp = matrix.transpose();
     std::ofstream output;
     output.open("output.txt");
     output << "Points_0,Points_1,Points_2" << std::endl;
-    for (int i = 0; i < matrix_t.rows(); i++) {
-        output << matrix_t.row(i)(0) << ','
-            << matrix_t.row(i)(1) << ','
-            << matrix_t.row(i)(2) << std::endl;
+    for (int i = 0; i < matrix_tmp.rows(); i++) {
+        output << matrix_tmp.row(i)(0) << ','
+            << matrix_tmp.row(i)(1) << ','
+            << matrix_tmp.row(i)(2) << std::endl;
+    }
+    output.close();
+}
+
+//matrix 3,n du coup
+void write_matrix(Eigen::MatrixXd matrix)
+{
+    auto matrix_tmp = matrix.transpose();
+    std::ofstream output;
+    output.open("output.txt");
+    output << "Points_0,Points_1,Points_2" << std::endl;
+    for (int i = 0; i < matrix_tmp.rows(); i++) {
+        output << matrix_tmp.row(i)(0) << ','
+            << matrix_tmp.row(i)(1) << ','
+            << matrix_tmp.row(i)(2) << std::endl;
     }
     output.close();
 }

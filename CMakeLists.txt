@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 
 project(icp LANGUAGES CUDA CXX)
 
-# Include Eigen from gihub
 include(FetchContent)
 
 FetchContent_Declare(
@@ -11,22 +10,10 @@ GIT_REPOSITORY https://github.com/google/benchmark.git
 GIT_TAG origin/master
 )
 
-#FetchContent_Declare(
-#eigen
-#URL https://gitlab.com/libeigen/eigen/-/archive/3.3.8/eigen-3.3.8.tar.gz
-#)
-
-# if (NOT GoogleBenchmark_POPULATED)
-#     FetchContent_Populate(GoogleBenchmark)
-#     set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "From Gtest")
-#     set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "From Gtest")
-# endif()
-
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF CACHE BOOL "FromGtest")
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "FromGtest")
 FetchContent_MakeAvailable(googlebenchmark)
 add_subdirectory(lib)
-#FetchContent_MakeAvailable(eigen)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -82,8 +69,8 @@ target_link_libraries(compute Eigen3::Eigen)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../)
 
 # CPU
-#add_executable(icp ${SRCS} ${HEADERS})
-#target_link_libraries(icp Eigen3::Eigen)
+add_executable(icp ${SRCS} ${HEADERS})
+target_link_libraries(icp Eigen3::Eigen)
 
 # GPU
 add_executable(icp-gpu ${SRCS_GPU_CUDA} ${HEADERS_GPU_CUDA})
