@@ -1,7 +1,8 @@
 #include "compute.hh"
 
-#define MAX_THREADS_PER_BLOCK 32
+#define MAX_THREADS_PER_BLOCK 256
 #define SHARED_THREADS_PER_BLOCK 32
+#define BATCH_SIZE 1280
 
 namespace GPU
 {
@@ -146,7 +147,7 @@ __global__ void find_Y(double *distance, size_t distance_p,
 
 void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
 {
-    size_t batch_size = 1024;
+    size_t batch_size = BATCH_SIZE;
     size_t n = (p.cols() / batch_size) + 5;
 
     size_t m_p;
