@@ -16,6 +16,8 @@ namespace GPU
     public:
         void fromGpu(double *gpu_rep, unsigned row, unsigned col, size_t pitch);
         double *toGpu(size_t *pitch) const;
+        int toGpu(double** p, size_t *pitch, size_t offset, size_t batch_size,
+                  bool iscol) const;
     };
 
     class ICP
