@@ -32,7 +32,6 @@ namespace CPU
     {
         unsigned int np;
         const MatrixXd &p;
-        /* const MatrixXd &sr; */
         double s;
         const MatrixXd &r;
         const MatrixXd &t;
@@ -62,19 +61,28 @@ namespace CPU
 
         struct closest_matrix_params get_closest_matrix_params()
         {
-            struct closest_matrix_params cmp{dim, np, nm, new_p, m};
+            struct closest_matrix_params cmp
+            {
+                dim, np, nm, new_p, m
+            };
             return cmp;
         }
 
         struct err_compute_params get_err_compute_params(Eigen::MatrixXd &Y)
         {
-            struct err_compute_params ecp{np, new_p, s, r, t, Y};
+            struct err_compute_params ecp
+            {
+                np, new_p, s, r, t, Y
+            };
             return ecp;
         }
 
         struct err_compute_alignment_params get_err_compute_alignment_params(Eigen::MatrixXd &Y)
         {
-            struct err_compute_alignment_params ecap{np, new_p, s, r, t, Y};
+            struct err_compute_alignment_params ecap
+            {
+                np, new_p, s, r, t, Y
+            };
             return ecap;
         }
 

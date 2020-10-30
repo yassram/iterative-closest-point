@@ -37,17 +37,12 @@ namespace GPU
 void computeDim(unsigned width, unsigned height,
                 dim3 *block, dim3 *grid)
 {
-    int devId = 0; // There may be more devices!
+    int devId = 0;
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, devId);
 
-    // int xMaxBlocks = deviceProp.maxGridSize[0];
-    // int yMaxBlocks = deviceProp.maxGridSize[1];
-
-    int xThreads = 32; // deviceProp.maxThreadsDim[0];
-    int yThreads = 32; // deviceProp.maxThreadsDim[1];
-
-    // int maxThreadPB = deviceProp.maxThreadsPerBlock;
+    int xThreads = 32;
+    int yThreads = 32;
 
     *block = dim3(xThreads, yThreads, 1);
 

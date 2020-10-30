@@ -4,6 +4,7 @@
 #include <complex>
 #include "gpu.hh"
 #include "compute.hh"
+
 void translate_overlap(double min_coord_ref[3], double max_coord_ref[3],
                        double min_coord_scene[3], double max_coord_scene[3])
 {
