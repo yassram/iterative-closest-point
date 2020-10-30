@@ -40,24 +40,15 @@ namespace GPU
 
     double ICP::find_alignment(Matrix y)
     {
-        auto dim_new_p = this->new_p.rows();
-        auto n_new_p = this->new_p.cols();
-
-        auto dim_y = y.rows();
-        auto n_y = y.cols();
-
-        if (n_new_p != n_y) {
+        if (this->p.cols() != this->m.cols()) {
             std::cerr << "Point sets need to have the same number of points.\n";
             return -1;
         }
 
-        if (dim_new_p != 3 || dim_y != 3) {
-            std::cerr << "Need points of dimension 3\n";
-            return -1;
-        }
 
-        if (n_new_p < 4) {
+        if (this->p.cols() < 4) {
             std::cerr << "Need at least 4 point pairs\n";
+            return -1;
         }
 
         Matrix mu_p{this->new_p.rowwise().mean()};
@@ -66,7 +57,7 @@ namespace GPU
         Matrix p_prime = substract_col_w(this->new_p, mu_p);
         Matrix y_prime = substract_col_w(y, mu_y);
 
-        MatrixXd s{p_prime * y_prime.transpose()}; //multiplication matricielle
+        MatrixXd s{p_prime * y_prime.transpose()};
 
         MatrixXd n_matrix{4, 4};
 
@@ -74,32 +65,6 @@ namespace GPU
             -1 * s(2,1) + s(1,2), s(0,0) - s(2,2) - s(1,1), s(0,1) + s(1,0), s(0,2) + s(2,0),
             s(2,0) - s(0,2), s(1,0) + s(0,1), s(1,1) - s(2,2) - s(0,0), s(1,2) + s(2,1),
             -1 * s(1,0) + s(0,1), s(2,0) + s(0,2), s(2,1) + s(1,2), s(2,2) - s(1,1) - s(0,0);
-
-        // auto px = p_prime.row(0);
-        // auto py = p_prime.row(1);
-        // auto pz = p_prime.row(2);
-
-        // auto yx = y_prime.row(0);
-        // auto yy = y_prime.row(1);
-        // auto yz = y_prime.row(2);
-
-        // auto sxx = (px.array() * yx.array()).sum();
-        // auto sxy = (px.array() * yy.array()).sum();
-        // auto sxz = (px.array() * yz.array()).sum();
-        // auto syx = (py.array() * yx.array()).sum();
-        // auto syy = (py.array() * yy.array()).sum();
-        // auto syz = (py.array() * yz.array()).sum();
-        // auto szx = (pz.array() * yx.array()).sum();
-        // auto szy = (pz.array() * yy.array()).sum();
-        // auto szz = (pz.array() * yz.array()).sum();
-
-        // MatrixXd n_matrix {MatrixXd{4, 4}};
-
-        // n_matrix << sxx + syy + szz, syz - szy, -1 * sxz + szx, sxy - syx,
-        //     -1 * szy + syz, sxx - szz - syy, sxy + syx, sxz + szx,
-        //     szx - sxz, syx + sxy, syy - szz - sxx, syz + szy,
-        //     -1 * syx + sxy, szx + sxz, szy + syz, szz - syy - sxx;
-
 
         Eigen::EigenSolver<MatrixXd> eigen_solver(n_matrix);
         auto eigen_values = eigen_solver.eigenvalues();
@@ -130,24 +95,13 @@ namespace GPU
         auto sp = 0.;
         auto d_caps = 0.;
 
-        // for (auto i = 0; i < n_new_p; i++) {
-        //     auto y_prime_view = y_prime.col(i);
-        //     auto p_prime_view = p_prime.col(i);
-        //     d_caps = d_caps + (y_prime_view.transpose() * y_prime_view)(0);
-        //     sp = sp + (p_prime_view.transpose() * p_prime_view)(0);
-        // }
-        y_p_norm_w(y_prime, p_prime, n_new_p, d_caps, sp);
+        y_p_norm_w(y_prime, p_prime, this->new_p.cols(), d_caps, sp);
 
         this->s = sqrt(d_caps / sp);
         this->t = {mu_y - this->s * r * mu_p};
 
         Matrix sr {this->s * this->r};
         double err = compute_err_w(y, this->new_p, false, sr, this->t);
-
-        // for (auto i = 0; i < n_new_p; i++) {
-        //     auto d = y.col(i) - ((this->s * this->r) * this->new_p.col(i) + this->t);
-        //     err += (d.transpose() * d)(0);
-        // }
 
         return err;
     }
