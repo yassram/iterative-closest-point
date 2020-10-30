@@ -136,25 +136,27 @@ __global__ void find_Y(double *distance, size_t distance_p,
     Y[j + 2 * Y_p] = mz;
 }
 
+
+
 void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
 {
+    size_t batch_size = 1024;
+    size_t n = (p.cols() / batch_size) + 5;
+
     size_t m_p;
     double *m_gpu = m.toGpu(&m_p);
-    //a corriger les tailles dynamiquement
-    double *distance[10];
-    size_t distance_p[10];
+
+    double *distance[n];
+    size_t distance_p[n];
     double *distance_cpu = (double*)std::malloc(sizeof(double) * p.cols() * m.cols());
 
     double *d_prime;
     double *p_prime;
 
-    double *p_gpu[10];
-    size_t p_p[10];
+    double *p_gpu[n];
+    size_t p_p[n];
 
     double *y_cpu = (double*)std::malloc(sizeof(double) * p.cols() * 3);
-
-    std::cout << "ok" << std::endl;
-    size_t batch_size = 2060;
 
     size_t current_batch_size = 0;
     size_t last_offset = 0;
@@ -162,7 +164,7 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
     {
         int i= 0;
 
-        std::cout << "boucle 1 - " << offset << std::endl;
+        //std::cout << "boucle 1 - " << offset << std::endl;
         while(true && offset < p.cols()){
             if (offset + batch_size >= p.cols()){
                 current_batch_size = p.cols() - offset;
@@ -209,7 +211,7 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
             else
                 current_batch_size = batch_size;
 
-            std::cout << "boucle 2 - "<< last_offset << std::endl;
+            //std::cout << "boucle 2 - "<< last_offset << std::endl;
 
             cudaFree(p_gpu[j]);
 
