@@ -115,7 +115,7 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
 {
     size_t m_p, p_p, Y_p;
     double *m_gpu = m.toGpu(&m_p);
-    double *p_gpu = p.toGpu(&p_p);
+    //double *p_gpu = p.toGpu(&p_p);
     double *Y_gpu = Y.toGpu(&Y_p);
 
     double *distance;
@@ -124,8 +124,34 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
 
     dim3 distBlk, distGrd;
     computeDim(m.cols(), p.cols(), &distBlk, &distGrd);
-    compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu, p_p, distance, distance_p, m.cols(), p.cols());
-    cudaDeviceSynchronize();
+    double p_cpu[p.cols()];// = std::malloc();
+    double distance_cpu[p.cols() * m.cols()];
+    size_t offset = 0;
+    size_t batch_size = p.cols();
+    for (size_t i = 0; i < p.cols();)
+    {
+        while(true){
+            auto err1 = cudaMallocPitch((void **) distance + offset, &distance_p, sizeof(double) * m.cols(), batch_size);
+
+            auto err2 = p.toGpu(p_gpu + offset, &p_p, offset, batch_size);
+            if (err2 != 0 && err1 != 0)
+                break;
+            compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu, p_p, distance, distance_p, m.cols(), p.cols());
+            offset += batch_size;
+        }
+        cudaDeviceSynchronize();
+
+        for (size_t j = 0; j < i; j++){
+            size_t cp_offset = batch_size * i;
+            cudaMemcpy2D(p_cpu + offset, sizeof(double) * m.cols(), p_gpu + cp_offset, m.cols() * sizeof(double),
+                         sizeof(double) * m.cols(), batch_size, cudaMemcpyDeviceToHost);
+            cudaMemcpy2D(distance_cpu + offset, distance_p, distance_gpu + offset, m.cols() * sizeof(double),
+                         sizeof(double) * m.cols(), batch_size, cudaMemcpyDeviceToHost);
+        }
+    }
+
+
+
 
     cudaFree(p_gpu);
 
@@ -268,24 +294,24 @@ __global__ void y_p_norm(const double *y_gpu, const double *p_gpu,
     sp_p = sp_p / sizeof(double);
 
     d_gpu[i] = y_gpu[i] * y_gpu[i] + y_gpu[i + y_p] * y_gpu[i + y_p]
-                                        + y_gpu[i + 2*y_p] * y_gpu[i + 2*y_p];
+        + y_gpu[i + 2*y_p] * y_gpu[i + 2*y_p];
     sp_gpu[i] = p_gpu[i] * p_gpu[i] + p_gpu[i + p_p] * p_gpu[i + p_p]
-                                        + p_gpu[i + 2*p_p] * p_gpu[i + 2*p_p];
+        + p_gpu[i + 2*p_p] * p_gpu[i + 2*p_p];
 }
 /*
-unsigned int powerizer(unsigned int x)
-{
-    --x;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    return ++x;
-}
+  unsigned int powerizer(unsigned int x)
+  {
+  --x;
+  x |= x >> 1;
+  x |= x >> 2;
+  x |= x >> 4;
+  x |= x >> 8;
+  x |= x >> 16;
+  return ++x;
+  }
 */
 void y_p_norm_w(const GPU::Matrix &y, const GPU::Matrix &p, size_t size_arr,
-                                                    double &d_caps, double &sp)
+                double &d_caps, double &sp)
 {
     size_t y_p, p_p, out_sp_p, out_d_p;
     double *y_gpu = y.toGpu(&y_p);
@@ -303,7 +329,7 @@ void y_p_norm_w(const GPU::Matrix &y, const GPU::Matrix &p, size_t size_arr,
     int yBlocks = 1;
     PGrd = dim3(xBlocks, yBlocks, 1);
     y_p_norm<<<PGrd, PBlk>>>(y_gpu, p_gpu, d_gpu, sp_gpu, y_p, p_p, out_d_p,
-                                                            out_sp_p, size_arr);
+                             out_sp_p, size_arr);
     cudaFree(p_gpu);
     cudaFree(y_gpu);
 
@@ -316,40 +342,40 @@ void y_p_norm_w(const GPU::Matrix &y, const GPU::Matrix &p, size_t size_arr,
     sp = out_sp.sum();
 }
 /*
-void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int size_arr, double &d_caps, double &sp)
-{
-    size_t y_p, p_p;
-    double *y_gpu = y.toGpu(&y_p);
-    double *p_gpu = p.toGpu(&p_p);
+  void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int size_arr, double &d_caps, double &sp)
+  {
+  size_t y_p, p_p;
+  double *y_gpu = y.toGpu(&y_p);
+  double *p_gpu = p.toGpu(&p_p);
 
-    unsigned int block_sz = ((size_arr) < 512) ? powerizer(size_arr) : 512;
-    unsigned int grid_sz = std::ceil((double)(size_arr) / (double)block_sz);
-    unsigned int smem_sz = sizeof(double) * block_sz;
+  unsigned int block_sz = ((size_arr) < 512) ? powerizer(size_arr) : 512;
+  unsigned int grid_sz = std::ceil((double)(size_arr) / (double)block_sz);
+  unsigned int smem_sz = sizeof(double) * block_sz;
 
-    double *out_p;
-    cudaMalloc(&out_p, sizeof(double) * size_arr);
+  double *out_p;
+  cudaMalloc(&out_p, sizeof(double) * size_arr);
 
-    double *out_y;
-    cudaMalloc(&out_y, sizeof(double) * size_arr);
+  double *out_y;
+  cudaMalloc(&out_y, sizeof(double) * size_arr);
 
-    y_p_norm<<<grid_sz, block_sz, smem_sz>>>(y_gpu, p_gpu, out_p, out_y, y_p, p_p, size_arr);
-    cudaFree(p_gpu);
-    cudaFree(y_gpu);
+  y_p_norm<<<grid_sz, block_sz, smem_sz>>>(y_gpu, p_gpu, out_p, out_y, y_p, p_p, size_arr);
+  cudaFree(p_gpu);
+  cudaFree(y_gpu);
 
-    double *r_p;
-    r_p = (double *)malloc(sizeof(double) * size_arr);
-    double *r_y;
-    r_y = (double *)malloc(sizeof(double) * size_arr);
-    cudaMemcpy(r_p, out_p, sizeof(double) * size_arr, cudaMemcpyDeviceToHost);
-    cudaMemcpy(r_y, out_y, sizeof(double) * size_arr, cudaMemcpyDeviceToHost);
-    cudaFree(out_p);
-    cudaFree(out_y);
+  double *r_p;
+  r_p = (double *)malloc(sizeof(double) * size_arr);
+  double *r_y;
+  r_y = (double *)malloc(sizeof(double) * size_arr);
+  cudaMemcpy(r_p, out_p, sizeof(double) * size_arr, cudaMemcpyDeviceToHost);
+  cudaMemcpy(r_y, out_y, sizeof(double) * size_arr, cudaMemcpyDeviceToHost);
+  cudaFree(out_p);
+  cudaFree(out_y);
 
-    for (unsigned int i = 0; i < size_arr; i++)
-    {
-        d_caps += r_y[i];
-        sp += r_p[i];
-    }
-    free(r_p);
-    free(r_y);
-}*/
+  for (unsigned int i = 0; i < size_arr; i++)
+  {
+  d_caps += r_y[i];
+  sp += r_p[i];
+  }
+  free(r_p);
+  free(r_y);
+  }*/
