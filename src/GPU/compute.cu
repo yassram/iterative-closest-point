@@ -161,8 +161,6 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
     std::cout << "ok" << std::endl;
     size_t batch_size = p.cols()/2;
 
-    dim3 distBlk, distGrd;
-    computeDim(m.cols(), batch_size, &distBlk, &distGrd);
 
 
     size_t last_offset = 0;
@@ -174,6 +172,7 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
         while(true && offset < p.cols()){
             //p_prime = p_p[i];
             std::cout << "while - " << offset << std::endl;
+
             auto err1 = cudaMallocPitch((void **) &d_prime, &distance_p[i],
                                         sizeof(double) * m.cols(), batch_size);
             std::cout << "err1: " << err1 << std::endl;
@@ -182,6 +181,13 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
             std::cout << "err2: " << err2 << std::endl;
             if (err2 != 0 && err1 != 0)
                 break;
+
+            dim3 distBlk, distGrd;
+
+            if (offset + batch_size >= p.cols())
+                computeDim(m.cols(), p.cols() - offset, &distBlk, &distGrd);
+            else
+                computeDim(m.cols(), batch_size, &distBlk, &distGrd);
             compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu[i], p_p[i], d_prime, distance_p[i],
                                                    m.cols(), p.cols(), batch_size, offset);
 
@@ -195,10 +201,14 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
             std::cout << "boucle 2 - "<< last_offset << std::endl;
             cudaFree(p_gpu[j]);
             d_prime = distance[j];
-            auto err_cpy = cudaMemcpy2D(distance_cpu + last_offset, sizeof(double)*m.cols(), d_prime, distance_p[j],
-                                        sizeof(double) * m.cols(), batch_size, cudaMemcpyDeviceToHost);
+            if (last_offset + batch_size >= p.cols())
+                auto err_cpy = cudaMemcpy2D(distance_cpu + last_offset * m.cols(), sizeof(double)*m.cols(), d_prime, distance_p[j],
+                                            sizeof(double) * m.cols(), p.cols() - last_offset, cudaMemcpyDeviceToHost);
+            else
+                auto err_cpy = cudaMemcpy2D(distance_cpu + last_offset * m.cols(), sizeof(double)*m.cols(), d_prime, distance_p[j],
+                                            sizeof(double) * m.cols(), batch_size, cudaMemcpyDeviceToHost);
             cudaFree(d_prime);
-            std::cout << "err cpy: " << err_cpy << std::endl;
+            //std::cout << "err cpy: " << err_cpy << std::endl;
 
 
             last_offset += batch_size;
