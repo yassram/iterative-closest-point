@@ -336,32 +336,28 @@ GPU::Matrix substract_col_w(const GPU::Matrix &M, const GPU::Matrix &m)
     return tmp;
 }
 
-__global__ void y_p_norm(const double *x_gpu,
-                         double *t,
-                         size_t x_p,
+__global__ void y_p_norm(const double *y_gpu, const double *p_gpu,
+                         double *d_gpu, double *sp_gpu,
+                         size_t y_p,
+                         size_t p_p,
+                         size_t d_p,
+                         size_t sp_p,
                          const int size)
 {
-    __shared__ double res[32];
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
 
     if (i >= size)
         return;
 
-    x_p = x_p / sizeof(double);
+    y_p = y_p / sizeof(double);
+    p_p = p_p / sizeof(double);
+    d_p = d_p / sizeof(double);
+    sp_p = sp_p / sizeof(double);
 
-    res[threadIdx.x] = x_gpu[i] * x_gpu[i] + x_gpu[i + x_p] * x_gpu[i + x_p]
-        + x_gpu[i + 2*x_p] * x_gpu[i + 2*x_p];
-
-    __syncthreads();
-
-    if (threadIdx.x == 0)
-    {
-        double sum = 0;
-        for (size_t j = 0; j < 32; j++) {
-            sum += res[j];
-        }
-        atomicAdd((int*)t, sum);
-    }
+    d_gpu[i] = y_gpu[i] * y_gpu[i] + y_gpu[i + y_p] * y_gpu[i + y_p]
+        + y_gpu[i + 2*y_p] * y_gpu[i + 2*y_p];
+    sp_gpu[i] = p_gpu[i] * p_gpu[i] + p_gpu[i + p_p] * p_gpu[i + p_p]
+        + p_gpu[i + 2*p_p] * p_gpu[i + 2*p_p];
 }
 
 void y_p_norm_w(const GPU::Matrix &y, const GPU::Matrix &p, size_t size_arr,
@@ -371,25 +367,27 @@ void y_p_norm_w(const GPU::Matrix &y, const GPU::Matrix &p, size_t size_arr,
     double *y_gpu = y.toGpu(&y_p);
     double *p_gpu = p.toGpu(&p_p);
 
-    double *d_gpu;
-    double *sp_gpu;
+    GPU::Matrix out_d{MatrixXd{1, size_arr}};
+    GPU::Matrix out_sp{MatrixXd{1, size_arr}};
 
-    cudaMalloc((void**)&d_gpu, sizeof(double));
-    cudaMalloc((void**)&sp_gpu, sizeof(double));
+    double *d_gpu = out_d.toGpu(&out_d_p);
+    double *sp_gpu = out_sp.toGpu(&out_sp_p);
 
     dim3 PBlk, PGrd;
     PBlk = dim3(32, 1, 1);
     int xBlocks = (int)std::ceil(((double) size_arr) / 32);
     int yBlocks = 1;
     PGrd = dim3(xBlocks, yBlocks, 1);
-    y_p_norm<<<PGrd, PBlk>>>(p_gpu, sp_gpu, p_p, size_arr);
-    y_p_norm<<<PGrd, PBlk>>>(y_gpu, d_gpu, y_p, size_arr);
-    cudaDeviceSynchronize();
+    y_p_norm<<<PGrd, PBlk>>>(y_gpu, p_gpu, d_gpu, sp_gpu, y_p, p_p, out_d_p,
+                             out_sp_p, size_arr);
     cudaFree(p_gpu);
     cudaFree(y_gpu);
-    cudaMemcpy(&d_caps, d_gpu, sizeof(double), cudaMemcpyDeviceToHost);
-    cudaMemcpy(&sp, sp_gpu, sizeof(double), cudaMemcpyDeviceToHost);
 
+    out_d.fromGpu(d_gpu, 1, out_d.cols(), out_d_p);
+    out_sp.fromGpu(sp_gpu, 1, out_sp.cols(), out_sp_p);
     cudaFree(d_gpu);
     cudaFree(sp_gpu);
+
+    d_caps = out_d.sum();
+    sp = out_sp.sum();
 }
