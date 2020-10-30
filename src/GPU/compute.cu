@@ -138,29 +138,33 @@ __global__ void find_Y(double *distance, size_t distance_p,
 
 void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
 {
-    size_t m_p, Y_p;
+    size_t m_p;
     double *m_gpu = m.toGpu(&m_p);
     //double *p_gpu = p.toGpu(&p_p);
-    double *Y_gpu = Y.toGpu(&Y_p);
+
 
     //cudaMallocPitch((void **)&distance, &distance_p, sizeof(double) * m.cols(), p.cols());
 
-    dim3 distBlk, distGrd;
-    computeDim(m.cols(), p.cols(), &distBlk, &distGrd);
+
 
     double *distance[3];
-    size_t distance_p;
+    size_t distance_p[3];
     double *distance_cpu = (double*)std::malloc(sizeof(double) * p.cols() * m.cols());
 
     double *d_prime;
-
+    double *p_prime;
 
     double *p_gpu[3];
-    size_t p_p;
+    size_t p_p[3];
     //double p_cpu[p.cols()];
 
     std::cout << "ok" << std::endl;
-    size_t batch_size = 15e00;
+    size_t batch_size = p.cols()/2;
+
+    dim3 distBlk, distGrd;
+    computeDim(m.cols(), batch_size, &distBlk, &distGrd);
+
+
     size_t last_offset = 0;
     for (size_t offset = 0; offset < p.cols();)
     {
@@ -168,15 +172,17 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
 
         std::cout << "boucle 1 - " << offset << std::endl;
         while(true && offset < p.cols()){
+            //p_prime = p_p[i];
             std::cout << "while - " << offset << std::endl;
-            auto err1 = cudaMallocPitch((void **) &d_prime, &distance_p,
+            auto err1 = cudaMallocPitch((void **) &d_prime, &distance_p[i],
                                         sizeof(double) * m.cols(), batch_size);
             std::cout << "err1: " << err1 << std::endl;
-            auto err2 = p.toGpu(p_gpu + i, &p_p, offset, batch_size, true);
+            auto err2 = p.toGpu(&p_prime, &p_p[i], offset, batch_size, true);
+            p_gpu[i] = p_prime;
             std::cout << "err2: " << err2 << std::endl;
             if (err2 != 0 && err1 != 0)
                 break;
-            compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu[i], p_p, d_prime, distance_p,
+            compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu[i], p_p[i], d_prime, distance_p[i],
                                                    m.cols(), p.cols(), batch_size, offset);
 
             distance[i] = d_prime;
@@ -189,7 +195,7 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
             std::cout << "boucle 2 - "<< last_offset << std::endl;
             cudaFree(p_gpu[j]);
             d_prime = distance[j];
-            auto err_cpy = cudaMemcpy2D(distance_cpu + last_offset, sizeof(double)*m.cols(), d_prime, distance_p,
+            auto err_cpy = cudaMemcpy2D(distance_cpu + last_offset, sizeof(double)*m.cols(), d_prime, distance_p[j],
                                         sizeof(double) * m.cols(), batch_size, cudaMemcpyDeviceToHost);
             cudaFree(d_prime);
             std::cout << "err cpy: " << err_cpy << std::endl;
@@ -199,6 +205,8 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
         }
     }
 
+    size_t Y_p;
+    double *Y_gpu = Y.toGpu(&Y_p);
 
     //cudaFree(p_gpu);
     size_t dd_p;
