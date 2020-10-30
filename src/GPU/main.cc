@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 
     GPU::Matrix t = translate_overlap(min_coord_ref, max_coord_ref,
                                       min_coord_scene, max_coord_scene);
-    matrix_scene = matrix_scene + t;
+    matrix_scene = GPU::Matrix{matrix_scene + t};
     GPU::ICP icp(matrix_ref, matrix_scene, max_iter);
 
     icp.find_corresponding();
