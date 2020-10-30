@@ -87,7 +87,7 @@ __global__ void compute_distance(double *m, size_t m_p, double *p, size_t p_p,
 
     if (i >= xSize)
         return;
-    if (j + batch_size * offset > ySize || j >= batch_size)
+    if (j >= batch_size)
         return;
 
     m_p = m_p / sizeof(double);
