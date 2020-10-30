@@ -3,14 +3,17 @@ cmake_minimum_required(VERSION 3.10)
 project(icp LANGUAGES CUDA CXX)
 
 # Include Eigen from gihub
-include(FetchContent)
-FetchContent_Declare(
-    eigen
-    URL https://gitlab.com/libeigen/eigen/-/archive/master/eigen-master.tar.gz
-    )
-FetchContent_MakeAvailable(eigen)
-find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+#include(FetchContent)
+#FetchContent_Declare(
+#    eigen
+#    URL https://gitlab.com/libeigen/eigen/-/archive/master/eigen-master.tar.gz
+#
+#)
+#FetchContent_MakeAvailable(eigen)
+#find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
+add_subdirectory(lib)
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-std=c++17")
@@ -22,38 +25,38 @@ find_package(CUDA REQUIRED)
 cmake_policy(SET CMP0104 OLD)
 
 set(SRCS
-        src/main.cc
-        src/load.cc
-        src/cpu.cc
+src/main.cc
+src/load.cc
+src/cpu.cc
 )
 
 set(HEADERS
-        src/cpu.hh
+src/cpu.hh
 )
 
 # -------------------- GPU -----------------------
 
 set(SRCS_GPU
-    src/GPU/main.cc
-    src/GPU/gpu.cc
-    src/load.cc
+src/GPU/main.cc
+src/GPU/gpu.cc
+src/load.cc
 )
 
 
 set(HEADERS_GPU
-    src/load.hh
-    src/GPU/compute.hh
-    src/GPU/gpu.hh
+src/load.hh
+src/GPU/compute.hh
+src/GPU/gpu.hh
 )
 
 set(SRCS_GPU_CUDA
-    src/GPU/compute.cu
+src/GPU/compute.cu
 )
 
 
 set(HEADERS_GPU_CUDA
-    src/GPU/compute.hh
-    src/GPU/gpu.hh
+src/GPU/compute.hh
+src/GPU/gpu.hh
 )
 
 
