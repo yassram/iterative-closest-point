@@ -164,27 +164,18 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
     {
         int i= 0;
 
-        //std::cout << "boucle 1 - " << offset << std::endl;
         while(true && offset < p.cols()){
-            if (offset + batch_size >= p.cols()){
+            if (offset + batch_size >= p.cols())
                 current_batch_size = p.cols() - offset;
-            }
             else
                 current_batch_size = batch_size;
 
-            //GPU::Matrix tmp{MatrixXd{current_batch_size,p.cols()}};
-
-            //std::cout << "while - " << offset << std::endl;
-
             auto err1 = cudaMallocPitch((void **) &d_prime, &distance_p[i],
                                         sizeof(double) * m.cols(), current_batch_size);
-            //std::cout << "err1: " << err1 << std::endl;
-
-            //tmp.fromGpu(d_prime, tmp.rows(), tmp.cols(), distance_p[i]);
 
             auto err2 = p.toGpu(&p_prime, &p_p[i], offset, current_batch_size, true);
             p_gpu[i] = p_prime;
-            //std::cout << "err2: " << err2 << std::endl;
+
             if (err2 != 0 || err1 != 0)
                 break;
 
@@ -192,12 +183,6 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
             computeDim(m.cols(), current_batch_size, &distBlk, &distGrd);
             compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu[i], p_p[i], d_prime, distance_p[i],
                                                    m.cols(), current_batch_size);
-
-            //tmp = {MatrixXd{p.rows(),current_batch_size}};
-            //tmp.fromGpu(p_gpu[i], tmp.rows(), tmp.cols(), distance_p[i]);
-
-            //tmp = {MatrixXd{current_batch_size,p.cols()}};
-            //tmp.fromGpu(d_prime, tmp.rows(), tmp.cols(), distance_p[i]);
 
             distance[i] = d_prime;
             i++;
@@ -210,8 +195,6 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
                 current_batch_size = p.cols() - last_offset;
             else
                 current_batch_size = batch_size;
-
-            //std::cout << "boucle 2 - "<< last_offset << std::endl;
 
             cudaFree(p_gpu[j]);
 
@@ -376,18 +359,7 @@ __global__ void y_p_norm(const double *y_gpu, const double *p_gpu,
     sp_gpu[i] = p_gpu[i] * p_gpu[i] + p_gpu[i + p_p] * p_gpu[i + p_p]
         + p_gpu[i + 2*p_p] * p_gpu[i + 2*p_p];
 }
-/*
-  unsigned int powerizer(unsigned int x)
-  {
-  --x;
-  x |= x >> 1;
-  x |= x >> 2;
-  x |= x >> 4;
-  x |= x >> 8;
-  x |= x >> 16;
-  return ++x;
-  }
-*/
+
 void y_p_norm_w(const GPU::Matrix &y, const GPU::Matrix &p, size_t size_arr,
                 double &d_caps, double &sp)
 {
@@ -419,41 +391,3 @@ void y_p_norm_w(const GPU::Matrix &y, const GPU::Matrix &p, size_t size_arr,
     d_caps = out_d.sum();
     sp = out_sp.sum();
 }
-/*
-  void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int size_arr, double &d_caps, double &sp)
-  {
-  size_t y_p, p_p;
-  double *y_gpu = y.toGpu(&y_p);
-  double *p_gpu = p.toGpu(&p_p);
-
-  unsigned int block_sz = ((size_arr) < 512) ? powerizer(size_arr) : 512;
-  unsigned int grid_sz = std::ceil((double)(size_arr) / (double)block_sz);
-  unsigned int smem_sz = sizeof(double) * block_sz;
-
-  double *out_p;
-  cudaMalloc(&out_p, sizeof(double) * size_arr);
-
-  double *out_y;
-  cudaMalloc(&out_y, sizeof(double) * size_arr);
-
-  y_p_norm<<<grid_sz, block_sz, smem_sz>>>(y_gpu, p_gpu, out_p, out_y, y_p, p_p, size_arr);
-  cudaFree(p_gpu);
-  cudaFree(y_gpu);
-
-  double *r_p;
-  r_p = (double *)malloc(sizeof(double) * size_arr);
-  double *r_y;
-  r_y = (double *)malloc(sizeof(double) * size_arr);
-  cudaMemcpy(r_p, out_p, sizeof(double) * size_arr, cudaMemcpyDeviceToHost);
-  cudaMemcpy(r_y, out_y, sizeof(double) * size_arr, cudaMemcpyDeviceToHost);
-  cudaFree(out_p);
-  cudaFree(out_y);
-
-  for (unsigned int i = 0; i < size_arr; i++)
-  {
-  d_caps += r_y[i];
-  sp += r_p[i];
-  }
-  free(r_p);
-  free(r_y);
-  }*/
