@@ -1,6 +1,5 @@
 #include "load.hh"
 
-
 void init_coord(double min_coord[3], double max_coord[3])
 {
     constexpr double l_double = std::numeric_limits<double>::lowest();
@@ -14,7 +13,7 @@ void init_coord(double min_coord[3], double max_coord[3])
 }
 
 void update_coord(double x, double y, double z,
-        double min_coord[3], double max_coord[3])
+                  double min_coord[3], double max_coord[3])
 {
     if (x > max_coord[0])
         max_coord[0] = x;
@@ -28,13 +27,10 @@ void update_coord(double x, double y, double z,
         max_coord[2] = z;
     if (z < min_coord[2])
         min_coord[2] = z;
-
 }
 
-
-
 GPU::Matrix load_matrix(const char *filename, double min_coord[3],
-        double max_coord[3])
+                        double max_coord[3])
 {
     std::ifstream infile;
     std::string line;
@@ -56,19 +52,20 @@ GPU::Matrix load_matrix(const char *filename, double min_coord[3],
     init_coord(min_coord, max_coord);
 
     std::cerr << "[load] loading file into matrix" << std::endl;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
+    {
         getline(infile, line);
         double x = 0., y = 0., z = 0.;
         std::sscanf(line.c_str(), "%lf,%lf,%lf", &x, &y, &z);
         update_coord(x, y, z, min_coord, max_coord);
         matrix.row(i) << x, y, z;
     }
-    GPU::Matrix res {matrix.transpose()};
+    GPU::Matrix res{matrix.transpose()};
     return res;
 }
 
 MatrixXd cpu_load_matrix(const char *filename, double min_coord[3],
-        double max_coord[3])
+                         double max_coord[3])
 {
     std::ifstream infile;
     std::string line;
@@ -90,7 +87,8 @@ MatrixXd cpu_load_matrix(const char *filename, double min_coord[3],
     init_coord(min_coord, max_coord);
 
     std::cerr << "[load] loading file into matrix" << std::endl;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
+    {
         getline(infile, line);
         double x = 0., y = 0., z = 0.;
         std::sscanf(line.c_str(), "%lf,%lf,%lf", &x, &y, &z);
@@ -101,32 +99,32 @@ MatrixXd cpu_load_matrix(const char *filename, double min_coord[3],
     return matrix.transpose();
 }
 
-//matrix 3,n du coup
 void write_matrix(GPU::Matrix matrix)
 {
     auto matrix_tmp = matrix.transpose();
     std::ofstream output;
     output.open("output.txt");
     output << "Points_0,Points_1,Points_2" << std::endl;
-    for (int i = 0; i < matrix_tmp.rows(); i++) {
+    for (int i = 0; i < matrix_tmp.rows(); i++)
+    {
         output << matrix_tmp.row(i)(0) << ','
-            << matrix_tmp.row(i)(1) << ','
-            << matrix_tmp.row(i)(2) << std::endl;
+               << matrix_tmp.row(i)(1) << ','
+               << matrix_tmp.row(i)(2) << std::endl;
     }
     output.close();
 }
 
-//matrix 3,n du coup
 void write_matrix(Eigen::MatrixXd matrix)
 {
     auto matrix_tmp = matrix.transpose();
     std::ofstream output;
     output.open("output.txt");
     output << "Points_0,Points_1,Points_2" << std::endl;
-    for (int i = 0; i < matrix_tmp.rows(); i++) {
+    for (int i = 0; i < matrix_tmp.rows(); i++)
+    {
         output << matrix_tmp.row(i)(0) << ','
-            << matrix_tmp.row(i)(1) << ','
-            << matrix_tmp.row(i)(2) << std::endl;
+               << matrix_tmp.row(i)(1) << ','
+               << matrix_tmp.row(i)(2) << std::endl;
     }
     output.close();
 }

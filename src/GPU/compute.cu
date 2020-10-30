@@ -37,17 +37,12 @@ namespace GPU
 void computeDim(unsigned width, unsigned height,
                 dim3 *block, dim3 *grid)
 {
-    int devId = 0; // There may be more devices!
+    int devId = 0;
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, devId);
 
-    // int xMaxBlocks = deviceProp.maxGridSize[0];
-    // int yMaxBlocks = deviceProp.maxGridSize[1];
-
-    int xThreads = 32; // deviceProp.maxThreadsDim[0];
-    int yThreads = 32; // deviceProp.maxThreadsDim[1];
-
-    // int maxThreadPB = deviceProp.maxThreadsPerBlock;
+    int xThreads = 32;
+    int yThreads = 32;
 
     *block = dim3(xThreads, yThreads, 1);
 
@@ -323,53 +318,3 @@ void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int s
     free(r_p);
     free(r_y);
 }
-
-// __global__ void dist_1(const double *m, const double *pi,
-//                        double *out, const unsigned int nm)
-// {
-//     unsigned int tid = threadIdx.x;
-//     unsigned int i = blockIdx.x * blockDim.x + tid;
-
-//     if (i > nm)
-//         return;
-
-//     for (unsigned j = 0; j < 3; j++)
-//     {
-//         double tmp_val = (pi[j] - m[j * nm + i]);
-//         out[i] += tmp_val * tmp_val;
-//     }
-// }
-
-// void dist_1_wrapper(const double *m, const double *pi,
-//                     double *out, const unsigned int nm)
-// {
-//     unsigned int block_sz = (nm < 512) ? powerizer(nm) : 512;
-//     unsigned int grid_sz = std::ceil((double)nm / (double)block_sz);
-//     unsigned int smem_sz = sizeof(double) * block_sz;
-//     dist_1<<<grid_sz, block_sz, smem_sz>>>(m, pi, out, nm);
-// }
-
-// void loopdist_1(const GPU::Matrix &p, const GPU::Matrix &m, unsigned int nm, GPU::Matrix &Y, unsigned int j, cublasHandle_t hdl)
-// {
-//     size_t m_p, p_p;
-//     double *p_gpu = p.toGpu(&p_p);
-//     double *m_gpu = m.toGpu(&m_p);
-
-//     double *d;
-//     cudaMalloc(&d, sizeof(double) * nm);
-//     cudaMemset(d, 0., sizeof(double) * nm);
-
-//     dist_1_wrapper(m_gpu, p_gpu, d, nm);
-//     cudaDeviceSynchronize();
-
-//     cudaFree(p_gpu);
-//     cudaFree(m_gpu);
-
-//     int amin{};
-//     // cublasIdamin(hdl, nm, d, 1, &amin);
-//     // cudaDeviceSynchronize();
-//     cudaFree(d);
-
-//     for (unsigned i = 0; i < 3; i++)
-//         Y[j + i * np] = m[(amin - 1) + nm * i];
-// }

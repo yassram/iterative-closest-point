@@ -9,9 +9,10 @@ void translate_overlap(double min_coord_ref[3], double max_coord_ref[3],
     // translate to avoid overlapping issue
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-    if (argc < 4) {
+    if (argc < 4)
+    {
         std::cout << "Usage: ./icp [path_to_ref_cloud] [path_to_transform_cloud] [nb_iter]\n";
         return -1;
     }
