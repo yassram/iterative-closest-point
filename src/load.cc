@@ -1,25 +1,40 @@
 #include "load.hh"
 
-void update_coord(double x, double y, double z, GPU::Matrix& min_coord,
-                  GPU::Matrix& max_coord)
+
+void init_coord(double min_coord[3], double max_coord[3])
 {
-    if (x > max_coord(0,0))
-        max_coord(0,0) = x;
-    if (x < min_coord(0,0))
-        min_coord(0,0) = x;
-    if (y > max_coord(1,0))
-        max_coord(1,0) = y;
-    if (y < min_coord(1,0))
-        min_coord(1,0) = y;
-    if (z > max_coord(2,0))
-        max_coord(2,0) = z;
-    if (z < min_coord(2,0))
-        min_coord(2,0) = z;
+    constexpr double l_double = std::numeric_limits<double>::lowest();
+    constexpr double h_double = std::numeric_limits<double>::max();
+    max_coord[0] = l_double;
+    max_coord[1] = l_double;
+    max_coord[2] = l_double;
+    min_coord[0] = h_double;
+    min_coord[1] = h_double;
+    min_coord[2] = h_double;
+}
+
+void update_coord(double x, double y, double z,
+                  double min_coord[3], double max_coord[3])
+{
+    if (x > max_coord[0])
+        max_coord[0] = x;
+    if (x < min_coord[0])
+        min_coord[0] = x;
+    if (y > max_coord[1])
+        max_coord[1] = y;
+    if (y < min_coord[1])
+        min_coord[1] = y;
+    if (z > max_coord[2])
+        max_coord[2] = z;
+    if (z < min_coord[2])
+        min_coord[2] = z;
+
 }
 
 
-GPU::Matrix load_matrix(const char *filename, GPU::Matrix& min_coord,
-                        GPU::Matrix& max_coord)
+
+GPU::Matrix load_matrix(const char *filename, double min_coord[3],
+                     double max_coord[3])
 {
     std::ifstream infile;
     std::string line;
@@ -37,6 +52,8 @@ GPU::Matrix load_matrix(const char *filename, GPU::Matrix& min_coord,
     infile.seekg(0, std::ios::beg);
     std::getline(infile, line);
     MatrixXd matrix = MatrixXd::Zero(n, 3);
+
+    init_coord(min_coord, max_coord);
 
     std::cerr << "[load] loading file into matrix" << std::endl;
     for (int i = 0; i < n; i++) {

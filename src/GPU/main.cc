@@ -4,16 +4,10 @@
 #include <complex>
 #include "gpu.hh"
 #include "compute.hh"
-GPU::Matrix translate_overlap(GPU::Matrix& min_coord_ref,
-                              GPU::Matrix& max_coord_ref,
-                              GPU::Matrix& min_coord_scene,
-                              GPU::Matrix& max_coord_scene)
+void translate_overlap(double min_coord_ref[3], double max_coord_ref[3],
+                       double min_coord_scene[3], double max_coord_scene[3])
 {
-    GPU::Matrix translate{MatrixXd{3, 1}};
-
-    translate << 2, 2, 2;
-
-    return translate;
+    // translate to avoid overlapping issue
 }
 
 int main(int argc, char* argv[])
@@ -23,20 +17,17 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    GPU::Matrix min_coord_ref{MatrixXd::Zero(3,1)};
-    GPU::Matrix max_coord_ref{MatrixXd::Zero(3,1)};
+    double min_coord_ref[3];
+    double max_coord_ref[3];
 
-    GPU::Matrix min_coord_scene{MatrixXd::Zero(3,1)};
-    GPU::Matrix max_coord_scene{MatrixXd::Zero(3,1)};
+    double min_coord_scene[3];
+    double max_coord_scene[3];
 
     int max_iter = atoi(argv[3]);
 
     auto matrix_ref = load_matrix(argv[1], min_coord_ref, max_coord_ref);
     auto matrix_scene = load_matrix(argv[2], min_coord_scene, max_coord_scene);
 
-    GPU::Matrix t = translate_overlap(min_coord_ref, max_coord_ref,
-                                      min_coord_scene, max_coord_scene);
-    matrix_scene = matrix_scene + t;
     GPU::ICP icp(matrix_ref, matrix_scene, max_iter);
 
     icp.find_corresponding();
