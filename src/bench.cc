@@ -4,6 +4,9 @@
 #include "load.hh"
 #include "GPU/gpu.hh"
 
+#define REF_PATH "data_students/cow_ref.txt"
+#define SCENE_PATH "data_students/cow_tr1.txt"
+
 //structs
 struct closest_matrix_params_cpy
 {
@@ -244,8 +247,8 @@ Eigen::MatrixXd cpu_matrix_loader(const char *s)
 
 struct closest_matrix_params_cpy closest_matrix_parameter()
 {
-    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt");
-    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt");
+    auto matrix_ref = cpu_load_matrix(REF_PATH);
+    auto matrix_scene = cpu_load_matrix(SCENE_PATH);
     CPU::ICP icp(matrix_ref, matrix_scene, 20);
 
     struct CPU::closest_matrix_params params_
@@ -261,8 +264,8 @@ struct closest_matrix_params_cpy closest_matrix_parameter()
 
 struct err_compute_params_cpy err_compute_parameter()
 {
-    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt");
-    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt");
+    auto matrix_ref = cpu_load_matrix(REF_PATH);
+    auto matrix_scene = cpu_load_matrix(SCENE_PATH);
 
     CPU::ICP icp(matrix_ref, matrix_scene, 20);
     MatrixXd Y = CPU::closest_matrix(icp.get_closest_matrix_params());
@@ -278,8 +281,8 @@ struct err_compute_params_cpy err_compute_parameter()
 
 struct gpu_err_compute_params_cpy gpu_err_compute_parameter(bool s)
 {
-    auto matrix_ref = load_matrix("data_students/cow_ref.txt");
-    auto matrix_scene = load_matrix("data_students/cow_tr1.txt");
+    auto matrix_ref = load_matrix(REF_PATH);
+    auto matrix_scene = load_matrix(SCENE_PATH);
 
     GPU::ICP icp(matrix_ref, matrix_scene, 20);
     GPU::Matrix Y{GPU::Matrix::Zero(icp.getDim(), icp.getNp())};
@@ -295,8 +298,8 @@ struct gpu_err_compute_params_cpy gpu_err_compute_parameter(bool s)
 
 struct cpu_centroid_params_cpy cpu_centroid_parameter()
 {
-    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt");
-    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt");
+    auto matrix_ref = cpu_load_matrix(REF_PATH);
+    auto matrix_scene = cpu_load_matrix(SCENE_PATH);
 
     CPU::ICP icp(matrix_ref, matrix_scene, 20);
     MatrixXd Y = CPU::closest_matrix(icp.get_closest_matrix_params());
@@ -310,8 +313,8 @@ struct cpu_centroid_params_cpy cpu_centroid_parameter()
 
 struct gpu_centroid_params_cpy gpu_centroid_parameter()
 {
-    auto matrix_ref = load_matrix("data_students/cow_ref.txt");
-    auto matrix_scene = load_matrix("data_students/cow_tr1.txt");
+    auto matrix_ref = load_matrix(REF_PATH);
+    auto matrix_scene = load_matrix(SCENE_PATH);
 
     GPU::ICP icp(matrix_ref, matrix_scene, 20);
     GPU::Matrix Y{GPU::Matrix::Zero(icp.getDim(), icp.getNp())};
@@ -327,8 +330,8 @@ struct gpu_centroid_params_cpy gpu_centroid_parameter()
 
 struct err_compute_alignment_params_cpy err_compute_alignment_parameter()
 {
-    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt");
-    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt");
+    auto matrix_ref = cpu_load_matrix(REF_PATH);
+    auto matrix_scene = cpu_load_matrix(SCENE_PATH);
 
     CPU::ICP icp(matrix_ref, matrix_scene, 20);
     MatrixXd Y = CPU::closest_matrix(icp.get_closest_matrix_params());
@@ -344,8 +347,8 @@ struct err_compute_alignment_params_cpy err_compute_alignment_parameter()
 
 struct gpu_closest_matrix_params_cpy gpu_closest_matrix_parameter()
 {
-    auto matrix_ref = load_matrix("data_students/cow_ref.txt");
-    auto matrix_scene = load_matrix("data_students/cow_tr1.txt");
+    auto matrix_ref = load_matrix(REF_PATH);
+    auto matrix_scene = load_matrix(SCENE_PATH);
     GPU::ICP icp(matrix_ref, matrix_scene, 20);
     GPU::Matrix Y{GPU::Matrix::Zero(icp.getDim(), icp.getNp())};
     struct GPU::gpu_closest_matrix_params params_
@@ -361,24 +364,24 @@ struct gpu_closest_matrix_params_cpy gpu_closest_matrix_parameter()
 
 GPU::ICP gpu_closest_matrix_naive_parameter()
 {
-    auto matrix_ref = load_matrix("data_students/cow_ref.txt");
-    auto matrix_scene = load_matrix("data_students/cow_tr1.txt");
+    auto matrix_ref = load_matrix(REF_PATH);
+    auto matrix_scene = load_matrix(SCENE_PATH);
     GPU::ICP icp(matrix_ref, matrix_scene, 20);
     return icp;
 }
 
 std::tuple<Eigen::MatrixXd, CPU::ICP> find_alignment_parameter()
 {
-    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt");
-    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt");
+    auto matrix_ref = cpu_load_matrix(REF_PATH);
+    auto matrix_scene = cpu_load_matrix(SCENE_PATH);
     CPU::ICP icp(matrix_ref, matrix_scene, 20);
     return std::tuple<Eigen::MatrixXd, CPU::ICP>(CPU::closest_matrix(icp.get_closest_matrix_params()), icp);
 }
 
 std::tuple<GPU::Matrix, GPU::ICP> gpu_find_alignment_parameter()
 {
-    auto matrix_ref = load_matrix("data_students/cow_ref.txt");
-    auto matrix_scene = load_matrix("data_students/cow_tr1.txt");
+    auto matrix_ref = load_matrix(REF_PATH);
+    auto matrix_scene = load_matrix(SCENE_PATH);
     GPU::ICP icp(matrix_ref, matrix_scene, 20);
     GPU::Matrix Y{GPU::Matrix::Zero(icp.getDim(), icp.getNp())};
     return std::tuple<GPU::Matrix, GPU::ICP>(Y, icp);
@@ -429,15 +432,15 @@ BENCHMARK_CAPTURE(BM_GPU_Err_compute, gpu_err_compute_alignment, gpu_err_compute
     ->Unit(benchmark::kMillisecond)
     ->UseRealTime();
 
-BENCHMARK_CAPTURE(BM_CPU_Find_corresponding, cpu_loop, cpu_matrix_loader("data_students/cow_ref.txt"), cpu_matrix_loader("data_students/cow_tr1.txt"), 20)
+BENCHMARK_CAPTURE(BM_CPU_Find_corresponding, cpu_loop, cpu_matrix_loader(REF_PATH), cpu_matrix_loader(SCENE_PATH), 20)
     ->Unit(benchmark::kMillisecond)
     ->UseRealTime();
 
-BENCHMARK_CAPTURE(BM_GPU_Find_corresponding_naive, naive_gpu_loop, gpu_matrix_loader("data_students/cow_ref.txt"), gpu_matrix_loader("data_students/cow_tr1.txt"), 20)
+BENCHMARK_CAPTURE(BM_GPU_Find_corresponding_naive, naive_gpu_loop, gpu_matrix_loader(REF_PATH), gpu_matrix_loader(SCENE_PATH), 20)
     ->Unit(benchmark::kMillisecond)
     ->UseRealTime();
 
-BENCHMARK_CAPTURE(BM_GPU_Find_corresponding_opti, opti_gpu_loop, gpu_matrix_loader("data_students/cow_ref.txt"), gpu_matrix_loader("data_students/cow_tr1.txt"), 20)
+BENCHMARK_CAPTURE(BM_GPU_Find_corresponding_opti, opti_gpu_loop, gpu_matrix_loader(REF_PATH), gpu_matrix_loader(SCENE_PATH), 20)
     ->Unit(benchmark::kMillisecond)
     ->UseRealTime();
 
