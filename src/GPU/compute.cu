@@ -89,6 +89,8 @@ void computeDim(unsigned width, unsigned height,
     *grid = dim3(xBlocks, yBlocks, 1);
 }
 
+////////////////////////////////// opti ////////////////////////////////////////
+
 __global__ void compute_distance(double *m, size_t m_p, double *p, size_t p_p,
                                  double *distance, size_t distance_p, int xSize,
                                  int ySize)
@@ -149,7 +151,7 @@ __global__ void find_Y(double *distance, size_t distance_p,
 
 
 
-void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
+void compute_Y_w_opti(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
 {
     size_t batch_size = BATCH_SIZE;
     size_t n = (p.cols() / batch_size) + 5;
@@ -241,6 +243,74 @@ void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
     std::free(y_cpu);
     std::free(distance_cpu);
 }
+
+
+
+
+///////////////////////////////// naive ////////////////////////////////////////
+
+__global__ void compute_distance_naive(double *m, size_t m_p, double *pi, size_t pi_p,
+                                       double *distance, int size){
+    int i = blockIdx.x*blockDim.x + threadIdx.x;
+
+    if (i >= size)
+        return;
+
+    m_p = m_p/sizeof(double);
+    double mx = m[i];
+    double my = m[i + m_p];
+    double mz = m[i + 2*m_p];
+
+    pi_p = pi_p/sizeof(double);
+    double x = pi[0] - mx;
+    double y = pi[pi_p] - my;
+    double z = pi[2*pi_p] - mz;
+
+    distance[i] = x*x + y*y + z*z;
+}
+
+__global__ void find_min_distance_naive(double *distance, int *minIdx, int size) {
+    *minIdx = 0;
+    for (int i = 1; i < size; i++)
+        if (distance[*minIdx] > distance[i])
+            *minIdx = i;
+}
+
+int compute_distance_w_naive(GPU::Matrix m, GPU::Matrix pi){
+    size_t m_p, pi_p;
+    double *m_gpu = m.toGpu(&m_p);
+    double *pi_gpu = pi.toGpu(&pi_p);
+
+    dim3 distBlk, distGrd;
+    computeDim(m.cols(), 1, &distBlk, &distGrd);
+
+    double *distance;
+    cudaMalloc((void **) &distance, sizeof(double)*m.cols());
+    compute_distance_naive<<<distGrd, distBlk>>>(m_gpu, m_p, pi_gpu, pi_p, distance, m.cols());
+    cudaDeviceSynchronize();
+
+    cudaFree(m_gpu);
+    cudaFree(pi_gpu);
+
+    int *minIdx;
+    cudaMalloc((void **) &minIdx, sizeof(int));
+    find_min_distance_naive<<<1, 1>>>(distance, minIdx, m.cols());
+    cudaDeviceSynchronize();
+
+    cudaFree(distance);
+
+    int h_minIdx = 0;
+    cudaMemcpy(&h_minIdx, minIdx, sizeof(int),
+               cudaMemcpyDeviceToHost);
+
+    cudaFree(minIdx);
+    return h_minIdx;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double *t_gpu,
                             double *err, size_t Y_p, size_t p_p, size_t sr_p,

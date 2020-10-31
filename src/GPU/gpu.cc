@@ -2,7 +2,54 @@
 
 namespace GPU
 {
-    void ICP::find_corresponding() {
+
+    Matrix ICP::compute_y_naive() {
+        Matrix Y{Matrix::Zero(this->dim, this->np)};
+        for (int j = 0; j < this->np; j++) {
+            Matrix pi {this->new_p.col(j)};
+            int minCol = compute_distance_w_naive(this->m, pi);
+            Y.col(j) = this->m.col(minCol);
+        }
+        return Y;
+    }
+
+    void ICP::find_corresponding_naive() {
+
+        if (this->p.cols() != this->m.cols()) {
+            std::cerr << "[error] Point sets need to have the same number of points.\n";
+            return exit(-1);
+        }
+
+        if (this->p.cols() < 4) {
+            std::cerr << "[error] Need at least 4 point pairs\n";
+            exit(-1);
+        }
+
+        for (int i = 0; i < this->max_iter; i++) {
+            std::cerr << "[ICP] iteration number " << i << " | ";
+
+            Matrix Y = {compute_y_naive()};
+
+            double err = ICP::find_alignment(Y);
+
+            for (int j = 0; j < this->np; j++) {
+                this->new_p.col(j) = (this->s * this->r) * this->new_p.col(j) + this->t;
+
+                Matrix e {Y.col(j) - this->new_p.col(j)};
+                err = err + (e.transpose() * e)(0);
+            }
+
+            err /= this->np;
+            std::cerr << "err = " << err << std::endl;
+
+            if (err < this->threshold)
+                break;
+        }
+
+    }
+
+
+    void ICP::find_corresponding_opti() {
 
         if (this->p.cols() != this->m.cols()) {
             std::cerr << "[error] Point sets need to have the same number of points.\n";
@@ -19,7 +66,7 @@ namespace GPU
 
             Matrix Y{Matrix::Zero(this->dim, this->np)};
 
-            compute_Y_w(m,new_p,Y);
+            compute_Y_w_opti(m,new_p,Y);
 
             double err = ICP::find_alignment(Y);
 

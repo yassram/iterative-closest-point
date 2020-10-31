@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 
     GPU::ICP icp(matrix_ref, matrix_scene, max_iter);
 
-    icp.find_corresponding();
+    icp.find_corresponding_opti();
     write_matrix(icp.new_p);
 
     return 0;
