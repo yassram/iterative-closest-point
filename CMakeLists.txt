@@ -42,37 +42,45 @@ set(HEADERS
 src/cpu.hh
 )
 
-# -------------------- Compute -----------------------
-
-#
 
 # -------------------- GPU -----------------------
 
-set(SRCS_GPU_CUDA
-src/load.cc
+
+set(SRCS_GPU
 src/GPU/main.cc
 src/GPU/gpu.cc
+src/load.cc
+)
+
+
+set(HEADERS_GPU
+src/load.hh
+src/GPU/gpu.hh
+)
+
+
+# -------------------- GPU Compute -----------------------
+
+set(SRCS_COMPUTE
 src/GPU/compute.cu
 )
 
-set(HEADERS_GPU_CUDA
-src/load.hh
-src/GPU/compute.hh
+set(HEADERS_COMPUTE
 src/GPU/gpu.hh
 )
 
 
 add_library(compute)
 target_compile_features(compute PUBLIC cxx_std_14)
-target_sources(compute PRIVATE ${SRCS_COMPUTE} ${HEADERS_COMPUTE})
+target_sources(compute PRIVATE ${SRCS_GPU} ${HEADERS_GPU})
 set_target_properties(compute PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 target_link_libraries(compute Eigen3::Eigen)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../)
 
 add_executable(icp ${SRCS} ${HEADERS})
-add_executable(icp-gpu ${SRCS_GPU_CUDA} ${HEADERS_GPU_CUDA})
+add_executable(icp-gpu ${SRCS_COMPUTE} ${HEADERS_COMPUTE})
 add_executable(bench src/bench.cc src/load.cc src/cpu.cc src/GPU/gpu.cc src/GPU/compute.cu ${HEADERS_GPU_CUDA} ${HEADERS})
 
 target_link_libraries(icp Eigen3::Eigen)
-target_link_libraries(icp-gpu Eigen3::Eigen)
+target_link_libraries(icp-gpu compute)
 target_link_libraries(bench Eigen3::Eigen benchmark::benchmark)

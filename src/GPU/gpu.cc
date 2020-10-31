@@ -1,70 +1,52 @@
 #include "gpu.hh"
-#include <cmath>
-#include <iostream>
 
 namespace GPU
 {
-    void ICP::find_corresponding()
-    {
+    void ICP::find_corresponding() {
 
-        for (int i = 0; i < this->max_iter; i++)
-        {
+        if (this->p.cols() != this->m.cols()) {
+            std::cerr << "[error] Point sets need to have the same number of points.\n";
+            return exit(-1);
+        }
+
+        if (this->p.cols() < 4) {
+            std::cerr << "[error] Need at least 4 point pairs\n";
+            exit(-1);
+        }
+
+        for (int i = 0; i < this->max_iter; i++) {
             std::cerr << "[ICP] iteration number " << i << " | ";
 
             Matrix Y{Matrix::Zero(this->dim, this->np)};
 
-            compute_Y_w(m, new_p, Y);
+            compute_Y_w(m,new_p,Y);
 
             double err = ICP::find_alignment(Y);
 
-            Matrix sr{this->s * this->r};
+            Matrix sr {this->s * this->r};
             err += compute_err_w(Y, this->new_p, true, sr, this->t);
 
             err /= this->np;
-            std::cerr << "err = " << err << std::endl;
+            std::cerr << "error value = " << err << std::endl;
 
             if (err < this->threshold)
                 break;
         }
+
     }
 
-    int max_element_index(Eigen::EigenSolver<MatrixXd>::EigenvalueType &eigen_value)
+    int max_element_index(Eigen::EigenSolver<MatrixXd>::EigenvalueType& eigen_value)
     {
         int index = 0;
         double max = real(eigen_value(0));
         for (int i = 1; i < 4; i++)
-        {
             if (real(eigen_value(i)) > max)
                 index = i;
-        }
         return index;
     }
 
     double ICP::find_alignment(Matrix y)
     {
-        auto dim_new_p = this->new_p.rows();
-        auto n_new_p = this->new_p.cols();
-
-        auto dim_y = y.rows();
-        auto n_y = y.cols();
-
-        if (n_new_p != n_y)
-        {
-            std::cerr << "Point sets need to have the same number of points.\n";
-            return -1;
-        }
-
-        if (dim_new_p != 3 || dim_y != 3)
-        {
-            std::cerr << "Need points of dimension 3\n";
-            return -1;
-        }
-
-        if (n_new_p < 4)
-        {
-            std::cerr << "Need at least 4 point pairs\n";
-            return -1;
-        }
 
         Matrix mu_p{this->new_p.rowwise().mean()};
         Matrix mu_y{y.rowwise().mean()};
@@ -76,10 +58,10 @@ namespace GPU
 
         MatrixXd n_matrix{4, 4};
 
-        n_matrix << s(0, 0) + s(1, 1) + s(2, 2), s(1, 2) - s(2, 1), -1 * s(0, 2) + s(2, 0), s(0, 1) - s(1, 0),
-            -1 * s(2, 1) + s(1, 2), s(0, 0) - s(2, 2) - s(1, 1), s(0, 1) + s(1, 0), s(0, 2) + s(2, 0),
-            s(2, 0) - s(0, 2), s(1, 0) + s(0, 1), s(1, 1) - s(2, 2) - s(0, 0), s(1, 2) + s(2, 1),
-            -1 * s(1, 0) + s(0, 1), s(2, 0) + s(0, 2), s(2, 1) + s(1, 2), s(2, 2) - s(1, 1) - s(0, 0);
+        n_matrix << s(0,0) + s(1,1) + s(2,2), s(1,2) - s(2,1), -1 * s(0,2) + s(2,0), s(0,1) - s(1,0),
+            -1 * s(2,1) + s(1,2), s(0,0) - s(2,2) - s(1,1), s(0,1) + s(1,0), s(0,2) + s(2,0),
+            s(2,0) - s(0,2), s(1,0) + s(0,1), s(1,1) - s(2,2) - s(0,0), s(1,2) + s(2,1),
+            -1 * s(1,0) + s(0,1), s(2,0) + s(0,2), s(2,1) + s(1,2), s(2,2) - s(1,1) - s(0,0);
 
         Eigen::EigenSolver<MatrixXd> eigen_solver(n_matrix);
         auto eigen_values = eigen_solver.eigenvalues();
@@ -103,22 +85,22 @@ namespace GPU
             q2, q3, q0, -1. * q1,
             q3, -1. * q2, q1, q0;
 
-        Matrix temp_r = {(q_bar.conjugate().transpose() * q_caps).real()};
+        Matrix temp_r = {(q_bar.transpose() * q_caps)};
 
         this->r = {temp_r.block(1, 1, 3, 3)};
 
         auto sp = 0.;
         auto d_caps = 0.;
 
-        y_p_norm_wrapper(y_prime, p_prime, n_new_p, d_caps, sp);
+        y_p_norm_w(y_prime, p_prime, this->new_p.cols(), d_caps, sp);
 
         this->s = sqrt(d_caps / sp);
-        this->t = {mu_y - this->s * r * mu_p};
+        Matrix sr {this->s * this->r};
+        this->t = {mu_y - sr * mu_p};
 
-        Matrix sr{this->s * this->r};
         double err = compute_err_w(y, this->new_p, false, sr, this->t);
 
         return err;
     }
 
-} // namespace GPU
+}

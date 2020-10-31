@@ -1,4 +1,8 @@
 #pragma once
+#include <cmath>
+#include <iostream>
+#include <exception>
+
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
@@ -62,31 +66,32 @@ namespace CPU
         struct closest_matrix_params get_closest_matrix_params()
         {
             struct closest_matrix_params cmp
-            {
-                dim, np, nm, new_p, m
-            };
+                {
+                    dim, np, nm, new_p, m
+                };
             return cmp;
         }
 
         struct err_compute_params get_err_compute_params(Eigen::MatrixXd &Y)
         {
             struct err_compute_params ecp
-            {
-                np, new_p, s, r, t, Y
-            };
+                {
+                    np, new_p, s, r, t, Y
+                };
             return ecp;
         }
 
         struct err_compute_alignment_params get_err_compute_alignment_params(Eigen::MatrixXd &Y)
         {
             struct err_compute_alignment_params ecap
-            {
-                np, new_p, s, r, t, Y
-            };
+                {
+                    np, new_p, s, r, t, Y
+                };
             return ecap;
         }
 
         void find_corresponding();
+        void alignement_check();
         double find_alignment(MatrixXd y);
 
     public:

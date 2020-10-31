@@ -92,9 +92,9 @@ void BM_CPU_closest_matrix(benchmark::State &st, struct closest_matrix_params_cp
     for (auto state : st)
     {
         struct CPU::closest_matrix_params params_
-        {
-            params.dim, params.np, params.nm, params.p, params.m
-        };
+            {
+                params.dim, params.np, params.nm, params.p, params.m
+            };
         CPU::closest_matrix(params_);
     }
 
@@ -106,9 +106,9 @@ void BM_CPU_Err_compute(benchmark::State &st, struct err_compute_params_cpy para
     for (auto state : st)
     {
         struct CPU::err_compute_params params_
-        {
-            params.np, params.p, params.s, params.r, params.t, params.Y
-        };
+            {
+                params.np, params.p, params.s, params.r, params.t, params.Y
+            };
         CPU::err_compute(params_);
     }
     st.counters["frame_rate"] = benchmark::Counter(st.iterations(), benchmark::Counter::kIsRate);
@@ -159,9 +159,9 @@ void BM_CPU_Err_compute_alignment(benchmark::State &st, struct err_compute_align
     for (auto state : st)
     {
         struct CPU::err_compute_alignment_params params_
-        {
-            params.np, params.p, params.s, params.r, params.t, params.Y
-        };
+            {
+                params.np, params.p, params.s, params.r, params.t, params.Y
+            };
         CPU::err_compute_alignment(params_);
     }
     st.counters["frame_rate"] = benchmark::Counter(st.iterations(), benchmark::Counter::kIsRate);
@@ -172,9 +172,9 @@ void BM_GPU_closest_matrix(benchmark::State &st, struct gpu_closest_matrix_param
     for (auto state : st)
     {
         struct gpu_closest_matrix_params_cpy params_
-        {
-            params.p, params.m, params.y
-        };
+            {
+                params.p, params.m, params.y
+            };
         compute_Y_w(params_.p, params_.m, params_.y);
     }
 
@@ -209,120 +209,86 @@ void BM_GPU_find_alignment(benchmark::State &st, std::tuple<GPU::Matrix, GPU::IC
 
 GPU::Matrix gpu_matrix_loader(const char *s)
 {
-    double min_coord[3];
-    double max_coord[3];
-    auto matrix_ref = load_matrix(s, min_coord, max_coord);
+    auto matrix_ref = load_matrix(s);
     return matrix_ref;
 }
 
 Eigen::MatrixXd cpu_matrix_loader(const char *s)
 {
-    double min_coord[3];
-    double max_coord[3];
-    auto matrix_ref = cpu_load_matrix(s, min_coord, max_coord);
+    auto matrix_ref = cpu_load_matrix(s);
     return matrix_ref;
 }
 
 struct closest_matrix_params_cpy closest_matrix_parameter()
 {
-    double min_coord_ref[3];
-    double max_coord_ref[3];
-
-    double min_coord_scene[3];
-    double max_coord_scene[3];
-
-    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt", min_coord_ref, max_coord_ref);
-    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt", min_coord_scene, max_coord_scene);
+    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt");
+    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt");
     CPU::ICP icp(matrix_ref, matrix_scene, 20);
 
     struct CPU::closest_matrix_params params_
-    {
-        icp.get_closest_matrix_params()
-    };
+        {
+            icp.get_closest_matrix_params()
+        };
     struct closest_matrix_params_cpy params
-    {
-        params_.dim, params_.np, params_.nm, params_.p, params_.m
-    };
+        {
+            params_.dim, params_.np, params_.nm, params_.p, params_.m
+        };
     return params;
 }
 
 struct err_compute_params_cpy err_compute_parameter()
 {
-    double min_coord_ref[3];
-    double max_coord_ref[3];
-
-    double min_coord_scene[3];
-    double max_coord_scene[3];
-
-    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt", min_coord_ref, max_coord_ref);
-    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt", min_coord_scene, max_coord_scene);
+    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt");
+    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt");
 
     CPU::ICP icp(matrix_ref, matrix_scene, 20);
     MatrixXd Y = CPU::closest_matrix(icp.get_closest_matrix_params());
 
     auto params_ = icp.get_err_compute_params(Y);
     struct err_compute_params_cpy params
-    {
-        params_.np, params_.p, params_.s, params_.r, params_.t, params_.Y
-    };
+        {
+            params_.np, params_.p, params_.s, params_.r, params_.t, params_.Y
+        };
 
     return params;
 }
 
 struct gpu_err_compute_params_cpy gpu_err_compute_parameter(bool s)
 {
-    double min_coord_ref[3];
-    double max_coord_ref[3];
-
-    double min_coord_scene[3];
-    double max_coord_scene[3];
-
-    auto matrix_ref = load_matrix("data_students/cow_ref.txt", min_coord_ref, max_coord_ref);
-    auto matrix_scene = load_matrix("data_students/cow_tr1.txt", min_coord_scene, max_coord_scene);
+    auto matrix_ref = load_matrix("data_students/cow_ref.txt");
+    auto matrix_scene = load_matrix("data_students/cow_tr1.txt");
 
     GPU::ICP icp(matrix_ref, matrix_scene, 20);
     GPU::Matrix Y{GPU::Matrix::Zero(icp.getDim(), icp.getNp())};
 
     auto params_ = icp.get_err_compute_params(Y, s);
     struct gpu_err_compute_params_cpy params
-    {
-        params_.Y, params_.p, params_.s, params_.sr, params_.t
-    };
+        {
+            params_.Y, params_.p, params_.s, params_.sr, params_.t
+        };
 
     return params;
 }
 
 struct cpu_centroid_params_cpy cpu_centroid_parameter()
 {
-    double min_coord_ref[3];
-    double max_coord_ref[3];
-
-    double min_coord_scene[3];
-    double max_coord_scene[3];
-
-    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt", min_coord_ref, max_coord_ref);
-    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt", min_coord_scene, max_coord_scene);
+    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt");
+    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt");
 
     CPU::ICP icp(matrix_ref, matrix_scene, 20);
     MatrixXd Y = CPU::closest_matrix(icp.get_closest_matrix_params());
 
     struct cpu_centroid_params_cpy params
-    {
-        icp.new_p, Y
-    };
+        {
+            icp.new_p, Y
+        };
     return params;
 }
 
 struct gpu_centroid_params_cpy gpu_centroid_parameter()
 {
-    double min_coord_ref[3];
-    double max_coord_ref[3];
-
-    double min_coord_scene[3];
-    double max_coord_scene[3];
-
-    auto matrix_ref = load_matrix("data_students/cow_ref.txt", min_coord_ref, max_coord_ref);
-    auto matrix_scene = load_matrix("data_students/cow_tr1.txt", min_coord_scene, max_coord_scene);
+    auto matrix_ref = load_matrix("data_students/cow_ref.txt");
+    auto matrix_scene = load_matrix("data_students/cow_tr1.txt");
 
     GPU::ICP icp(matrix_ref, matrix_scene, 20);
     GPU::Matrix Y{GPU::Matrix::Zero(icp.getDim(), icp.getNp())};
@@ -330,82 +296,58 @@ struct gpu_centroid_params_cpy gpu_centroid_parameter()
     compute_Y_w(params_.m, params_.p, params_.y);
 
     struct gpu_centroid_params_cpy params
-    {
-        params_.p, params_.y
-    };
+        {
+            params_.p, params_.y
+        };
     return params;
 }
 
 struct err_compute_alignment_params_cpy err_compute_alignment_parameter()
 {
-    double min_coord_ref[3];
-    double max_coord_ref[3];
-
-    double min_coord_scene[3];
-    double max_coord_scene[3];
-
-    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt", min_coord_ref, max_coord_ref);
-    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt", min_coord_scene, max_coord_scene);
+    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt");
+    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt");
 
     CPU::ICP icp(matrix_ref, matrix_scene, 20);
     MatrixXd Y = CPU::closest_matrix(icp.get_closest_matrix_params());
 
     auto params_ = icp.get_err_compute_alignment_params(Y);
     struct err_compute_alignment_params_cpy params
-    {
-        params_.np, params_.p, params_.s, params_.r, params_.t, params_.y
-    };
+        {
+            params_.np, params_.p, params_.s, params_.r, params_.t, params_.y
+        };
 
     return params;
 }
 
 struct gpu_closest_matrix_params_cpy gpu_closest_matrix_parameter()
 {
-    double min_coord_ref[3];
-    double max_coord_ref[3];
-
-    double min_coord_scene[3];
-    double max_coord_scene[3];
-
-    auto matrix_ref = load_matrix("data_students/cow_ref.txt", min_coord_ref, max_coord_ref);
-    auto matrix_scene = load_matrix("data_students/cow_tr1.txt", min_coord_scene, max_coord_scene);
+    auto matrix_ref = load_matrix("data_students/cow_ref.txt");
+    auto matrix_scene = load_matrix("data_students/cow_tr1.txt");
     GPU::ICP icp(matrix_ref, matrix_scene, 20);
     GPU::Matrix Y{GPU::Matrix::Zero(icp.getDim(), icp.getNp())};
     struct GPU::gpu_closest_matrix_params params_
-    {
-        icp.get_closest_matrix_params(Y)
-    };
+        {
+            icp.get_closest_matrix_params(Y)
+        };
     struct gpu_closest_matrix_params_cpy params
-    {
-        params_.p, params_.m, params_.y
-    };
+        {
+            params_.p, params_.m, params_.y
+        };
     return params;
 }
 
 std::tuple<Eigen::MatrixXd, CPU::ICP> find_alignment_parameter()
 {
-    double min_coord_ref[3];
-    double max_coord_ref[3];
-
-    double min_coord_scene[3];
-    double max_coord_scene[3];
-
-    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt", min_coord_ref, max_coord_ref);
-    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt", min_coord_scene, max_coord_scene);
+    auto matrix_ref = cpu_load_matrix("data_students/cow_ref.txt");
+    auto matrix_scene = cpu_load_matrix("data_students/cow_tr1.txt");
     CPU::ICP icp(matrix_ref, matrix_scene, 20);
     return std::tuple<Eigen::MatrixXd, CPU::ICP>(CPU::closest_matrix(icp.get_closest_matrix_params()), icp);
 }
 
 std::tuple<GPU::Matrix, GPU::ICP> gpu_find_alignment_parameter()
 {
-    double min_coord_ref[3];
-    double max_coord_ref[3];
-
-    double min_coord_scene[3];
-    double max_coord_scene[3];
-
-    auto matrix_ref = load_matrix("data_students/cow_ref.txt", min_coord_ref, max_coord_ref);
-    auto matrix_scene = load_matrix("data_students/cow_tr1.txt", min_coord_scene, max_coord_scene);
+    auto matrix_ref = load_matrix("data_students/cow_ref.txt");
+    auto matrix_scene = load_matrix("data_students/cow_tr1.txt");
     GPU::ICP icp(matrix_ref, matrix_scene, 20);
     GPU::Matrix Y{GPU::Matrix::Zero(icp.getDim(), icp.getNp())};
     return std::tuple<GPU::Matrix, GPU::ICP>(Y, icp);
@@ -413,51 +355,51 @@ std::tuple<GPU::Matrix, GPU::ICP> gpu_find_alignment_parameter()
 
 //main_calls
 BENCHMARK_CAPTURE(BM_CPU_closest_matrix, cpu_closest_matrix, closest_matrix_parameter())
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_GPU_closest_matrix, gpu_closest_matrix, gpu_closest_matrix_parameter())
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_CPU_find_alignment, cpu_find_alignment, find_alignment_parameter())
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_GPU_find_alignment, gpu_find_alignment, gpu_find_alignment_parameter())
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_CPU_Compute_centroid, cpu_compute_centroid, cpu_centroid_parameter())
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_GPU_Compute_centroid, gpu_compute_centroid, gpu_centroid_parameter())
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_CPU_Err_compute, cpu_err_compute, err_compute_parameter())
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_GPU_Err_compute, gpu_err_compute, gpu_err_compute_parameter(false))
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_CPU_Err_compute_alignment, cpu_err_compute_alignment, err_compute_alignment_parameter())
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_GPU_Err_compute, gpu_err_compute_alignment, gpu_err_compute_parameter(true))
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_CPU_Find_corresponding, cpu_loop, cpu_matrix_loader("data_students/cow_ref.txt"), cpu_matrix_loader("data_students/cow_tr1.txt"), 20)
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_CAPTURE(BM_GPU_Find_corresponding, gpu_loop, gpu_matrix_loader("data_students/cow_ref.txt"), gpu_matrix_loader("data_students/cow_tr1.txt"), 20)
-    ->Unit(benchmark::kMillisecond)
-    ->UseRealTime();
+->Unit(benchmark::kMillisecond)
+->UseRealTime();
 
 BENCHMARK_MAIN();

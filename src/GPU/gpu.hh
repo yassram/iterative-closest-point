@@ -1,7 +1,10 @@
 #pragma once
+#include <cmath>
+#include <iostream>
+#include <exception>
+
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
-#include "compute.hh"
 
 using Eigen::ArrayXd;
 using Eigen::MatrixXcd;
@@ -27,13 +30,13 @@ namespace GPU
     };
 
     struct gpu_err_compute_params
-{
-    const Matrix &Y;
-    Matrix &p;
-    bool s;
-    const Matrix sr;
-    const Matrix &t;
-};
+    {
+        const Matrix &Y;
+        Matrix &p;
+        bool s;
+        const Matrix sr;
+        const Matrix &t;
+    };
 
     class ICP
     {
@@ -55,17 +58,17 @@ namespace GPU
         struct gpu_closest_matrix_params get_closest_matrix_params(Matrix &Y)
         {
             struct gpu_closest_matrix_params cmp
-            {
-                new_p, m, Y
-            };
+                {
+                    new_p, m, Y
+                };
             return cmp;
         }
         struct gpu_err_compute_params get_err_compute_params(Matrix &Y, bool s)
         {
             struct gpu_err_compute_params cmp
-            {
-                Y, new_p, s, s*r, t
-            };
+                {
+                    Y, new_p, s, s*r, t
+                };
             return cmp;
         }
 
@@ -99,9 +102,12 @@ namespace GPU
     };
 } // namespace GPU
 
+
+// Compute wrapper functions
+
 void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &pi, GPU::Matrix &Y);
 double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p, bool in_place,
                      const GPU::Matrix &sr, const GPU::Matrix &t);
 
 GPU::Matrix substract_col_w(const GPU::Matrix &M, const GPU::Matrix &m);
-void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int size_arr, double &d_caps, double &sp);
+void y_p_norm_w(const GPU::Matrix &y, const GPU::Matrix &p, size_t size_arr, double &d_caps, double &sp);

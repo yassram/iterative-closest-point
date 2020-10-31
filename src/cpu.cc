@@ -1,6 +1,4 @@
 #include "cpu.hh"
-#include <cmath>
-#include <iostream>
 
 namespace CPU
 {
@@ -41,8 +39,22 @@ namespace CPU
         return err;
     }
 
+    void ICP::alignement_check()
+    {
+        if (this->p.cols() != this->m.cols()) {
+            std::cerr << "[error] Point sets need to have the same number of points.\n";
+            return exit(-1);
+        }
+
+        if (this->p.cols() < 4) {
+            std::cerr << "[error] Need at least 4 point pairs\n";
+            exit(-1);
+        }
+    }
+
     void ICP::find_corresponding()
     {
+        alignement_check();
 
         for (int i = 0; i < this->max_iter; i++)
         {
@@ -53,13 +65,13 @@ namespace CPU
             double err = ICP::find_alignment(Y);
 
             struct err_compute_params ecp
-            {
-                this->np, this->new_p, this->s, this->r, this->t, Y
-            };
+                {
+                    this->np, this->new_p, this->s, this->r, this->t, Y
+                };
             err += err_compute(ecp);
 
             err /= this->np;
-            std::cerr << "err = " << err << std::endl;
+            std::cerr << "error value = " << err << std::endl;
 
             if (err < this->threshold)
                 break;
@@ -76,28 +88,6 @@ namespace CPU
                 index = i;
         }
         return index;
-    }
-
-    int alignement_check(unsigned n_new_p,unsigned dim_new_p,unsigned dim_y,unsigned n_y)
-    {
-        if (n_new_p != n_y)
-        {
-            std::cerr << "Point sets need to have the same number of points.\n";
-            return -1;
-        }
-
-        if (dim_new_p != 3 || dim_y != 3)
-        {
-            std::cerr << "Need points of dimension 3\n";
-            return -1;
-        }
-
-        if (n_new_p < 4)
-        {
-            std::cerr << "Need at least 4 point pairs\n";
-            return -1;
-        }
-        return 0;
     }
 
     double err_compute_alignment(struct err_compute_alignment_params pa)
@@ -119,9 +109,6 @@ namespace CPU
 
         auto dim_y = y.rows();
         auto n_y = y.cols();
-
-        if(alignement_check(n_new_p, dim_new_p, dim_y, n_y))
-            return -1;
 
         auto mu_p = this->new_p.rowwise().mean();
         auto mu_y = y.rowwise().mean();
@@ -180,9 +167,9 @@ namespace CPU
         this->t = mu_y - sr * mu_p;
 
         struct err_compute_alignment_params ecap
-        {
-         this->np, this->new_p, this->s, this->r, this->t, y
-        };
+            {
+                this->np, this->new_p, this->s, this->r, this->t, y
+            };
 
         return err_compute_alignment(ecap);
     }

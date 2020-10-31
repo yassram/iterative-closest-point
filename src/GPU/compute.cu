@@ -1,4 +1,12 @@
-#include "compute.hh"
+#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+
+#include "gpu.hh"
+
+#define MAX_THREADS_PER_BLOCK 256
+#define SHARED_THREADS_PER_BLOCK 32
+#define BATCH_SIZE 1280
 
 namespace GPU
 {
@@ -24,25 +32,55 @@ namespace GPU
         unsigned c = this->cols();
 
         double *d_x;
-        cudaMallocPitch((void **)&d_x, pitch, sizeof(double) * c, r);
-
+        auto err = cudaMallocPitch((void **)&d_x, pitch, sizeof(double) * c, r);
         Matrix tmp{this->transpose()};
         double *h_d = tmp.data();
         cudaMemcpy2D(d_x, *pitch, h_d, c * sizeof(double), sizeof(double) * c,
                      r, cudaMemcpyHostToDevice);
         return (double *)d_x;
     }
+
+    int Matrix::toGpu(double** p, size_t *pitch, size_t offset, size_t batch_size, bool iscol) const
+    {
+        unsigned r = this->rows();
+        unsigned c = this->cols();
+        int err;
+        if (iscol)
+            err = cudaMallocPitch((void **)p, pitch, sizeof(double) * batch_size, r);
+        else
+            err = cudaMallocPitch((void **)p, pitch, sizeof(double) * c, batch_size);
+        if (err != 0)
+            return err;
+        Matrix tmp{this->transpose()};
+        double *h_d = tmp.data();
+        if (iscol)
+            cudaMemcpy2D(*p, *pitch, h_d + offset, c * sizeof(double), sizeof(double) * batch_size,
+                         r, cudaMemcpyHostToDevice);
+        else
+            cudaMemcpy2D(*p, *pitch, h_d + offset, c * sizeof(double), sizeof(double) * c,
+                         batch_size, cudaMemcpyHostToDevice);
+        return err;
+    }
 } // namespace GPU
 
 void computeDim(unsigned width, unsigned height,
                 dim3 *block, dim3 *grid)
 {
-    int devId = 0;
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, devId);
+    int xThreads;
+    int yThreads;
 
-    int xThreads = 32;
-    int yThreads = 32;
+    if (width == 1){
+        xThreads = 1;
+        yThreads = MAX_THREADS_PER_BLOCK;
+    }
+    else if (height == 1){
+        xThreads = MAX_THREADS_PER_BLOCK;
+        yThreads = 1;
+    }
+    else{
+        xThreads = SHARED_THREADS_PER_BLOCK;
+        yThreads = SHARED_THREADS_PER_BLOCK;
+    }
 
     *block = dim3(xThreads, yThreads, 1);
 
@@ -52,12 +90,15 @@ void computeDim(unsigned width, unsigned height,
 }
 
 __global__ void compute_distance(double *m, size_t m_p, double *p, size_t p_p,
-                                 double *distance, size_t distance_p, int xSize, int ySize)
+                                 double *distance, size_t distance_p, int xSize,
+                                 int ySize)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     int j = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (i >= xSize || j >= ySize)
+    if (i >= xSize)
+        return;
+    if (j >= ySize)
         return;
 
     m_p = m_p / sizeof(double);
@@ -106,41 +147,103 @@ __global__ void find_Y(double *distance, size_t distance_p,
     Y[j + 2 * Y_p] = mz;
 }
 
+
+
 void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &p, GPU::Matrix &Y)
 {
-    size_t m_p, p_p, Y_p;
+    size_t batch_size = BATCH_SIZE;
+    size_t n = (p.cols() / batch_size) + 5;
+
+    size_t m_p;
     double *m_gpu = m.toGpu(&m_p);
-    double *p_gpu = p.toGpu(&p_p);
-    double *Y_gpu = Y.toGpu(&Y_p);
 
-    double *distance;
-    size_t distance_p;
-    cudaMallocPitch((void **)&distance, &distance_p, sizeof(double) * m.cols(), p.cols());
+    double *distance[n];
+    size_t distance_p[n];
+    double *distance_cpu = (double*)std::malloc(sizeof(double) * p.cols() * m.cols());
 
-    dim3 distBlk, distGrd;
-    computeDim(m.cols(), p.cols(), &distBlk, &distGrd);
-    compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu, p_p, distance, distance_p, m.cols(), p.cols());
-    cudaDeviceSynchronize();
+    double *d_prime;
+    double *p_prime;
 
-    cudaFree(p_gpu);
+    double *p_gpu[n];
+    size_t p_p[n];
 
-    dim3 YBlk, YGrd;
-    YBlk = dim3(1, 32, 1);
-    int xBlocks = 1;
-    int yBlocks = (int)std::ceil(((double)p.cols()) / 32);
-    YGrd = dim3(xBlocks, yBlocks, 1);
-    find_Y<<<YGrd, YBlk>>>(distance, distance_p, m_gpu, m_p, Y_gpu, Y_p, m.cols(), p.cols());
-    cudaDeviceSynchronize();
+    double *y_cpu = (double*)std::malloc(sizeof(double) * p.cols() * 3);
 
+    size_t current_batch_size = 0;
+    size_t last_offset = 0;
+    for (size_t offset = 0; offset < p.cols();)
+    {
+        int i= 0;
+
+        while(true && offset < p.cols()){
+            if (offset + batch_size >= p.cols())
+                current_batch_size = p.cols() - offset;
+            else
+                current_batch_size = batch_size;
+
+            auto err1 = cudaMallocPitch((void **) &d_prime, &distance_p[i],
+                                        sizeof(double) * m.cols(), current_batch_size);
+
+            auto err2 = p.toGpu(&p_prime, &p_p[i], offset, current_batch_size, true);
+            p_gpu[i] = p_prime;
+
+            if (err2 != 0 || err1 != 0)
+                break;
+
+            dim3 distBlk, distGrd;
+            computeDim(m.cols(), current_batch_size, &distBlk, &distGrd);
+            compute_distance<<<distGrd, distBlk>>>(m_gpu, m_p, p_gpu[i], p_p[i], d_prime, distance_p[i],
+                                                   m.cols(), current_batch_size);
+
+            distance[i] = d_prime;
+            i++;
+            offset += current_batch_size;
+        }
+        cudaDeviceSynchronize();
+
+        for (size_t j = 0; j < i; j++){
+            if (last_offset + batch_size >= p.cols())
+                current_batch_size = p.cols() - last_offset;
+            else
+                current_batch_size = batch_size;
+
+            cudaFree(p_gpu[j]);
+
+            d_prime = distance[j];
+
+            double *Y_prime;
+            size_t Y_prime_p;
+            auto err1 = cudaMallocPitch((void **) &Y_prime, &Y_prime_p,
+                                        sizeof(double) * current_batch_size, p.rows());
+
+            dim3 YBlk, YGrd;
+            computeDim(1,current_batch_size, &YBlk, &YGrd);
+            find_Y<<<YGrd, YBlk>>>(d_prime, distance_p[j], m_gpu, m_p, Y_prime,
+                                   Y_prime_p, m.cols(), current_batch_size);
+            cudaDeviceSynchronize();
+
+            auto err_cpy = cudaMemcpy2D(y_cpu + last_offset, sizeof(double)*p.cols(),
+                                        Y_prime, Y_prime_p, sizeof(double) * current_batch_size,
+                                        p.rows(), cudaMemcpyDeviceToHost);
+
+            cudaFree(Y_prime);
+            cudaFree(d_prime);
+            last_offset += batch_size;
+        }
+    }
     cudaFree(m_gpu);
-    cudaFree(distance);
 
-    Y.fromGpu(Y_gpu, Y.rows(), Y.cols(), Y_p);
-
-    cudaFree(Y_gpu);
+    for (int i = 0; i < Y.rows(); i++){
+        for (int j = 0; j < Y.cols(); j++){
+            Y(i,j) = y_cpu[i * Y.cols() + j];
+        }
+    }
+    std::free(y_cpu);
+    std::free(distance_cpu);
 }
 
-__global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double *t_gpu, double *err, size_t Y_p, size_t p_p, size_t sr_p,
+__global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double *t_gpu,
+                            double *err, size_t Y_p, size_t p_p, size_t sr_p,
                             size_t t_p, size_t err_p, unsigned int size)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -154,9 +257,12 @@ __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double
     t_p = t_p / sizeof(double);
     err_p = err_p / sizeof(double);
 
-    double px = sr_gpu[0] * p_gpu[i] + sr_gpu[1] * p_gpu[i + p_p] + sr_gpu[2] * p_gpu[i + 2 * p_p];
-    double py = sr_gpu[sr_p] * p_gpu[i] + sr_gpu[1 + sr_p] * p_gpu[i + p_p] + sr_gpu[2 + sr_p] * p_gpu[i + 2 * p_p];
-    double pz = sr_gpu[2 * sr_p] * p_gpu[i] + sr_gpu[1 + 2 * sr_p] * p_gpu[i + p_p] + sr_gpu[2 + 2 * sr_p] * p_gpu[i + 2 * p_p];
+    double px = sr_gpu[0] * p_gpu[i] + sr_gpu[1] * p_gpu[i + p_p] + sr_gpu[2] *
+        p_gpu[i + 2 * p_p];
+    double py = sr_gpu[sr_p] * p_gpu[i] + sr_gpu[1 + sr_p] * p_gpu[i + p_p] +
+        sr_gpu[2 + sr_p] * p_gpu[i + 2 * p_p];
+    double pz = sr_gpu[2 * sr_p] * p_gpu[i] + sr_gpu[1 + 2 * sr_p] *
+        p_gpu[i + p_p] + sr_gpu[2 + 2 * sr_p] * p_gpu[i + 2 * p_p];
 
     p_gpu[i] = px + t_gpu[0];
     p_gpu[i + p_p] = py + t_gpu[t_p];
@@ -165,7 +271,8 @@ __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double
     Y_gpu[i] = Y_gpu[i] - p_gpu[i];
     Y_gpu[i + Y_p] = Y_gpu[i + Y_p] - p_gpu[i + p_p];
     Y_gpu[i + 2 * Y_p] = Y_gpu[i + 2 * Y_p] - p_gpu[i + 2 * p_p];
-    err[i] = Y_gpu[i] * Y_gpu[i] + Y_gpu[i + Y_p] * Y_gpu[i + Y_p] + Y_gpu[i + 2 * Y_p] * Y_gpu[i + 2 * Y_p];
+    err[i] = Y_gpu[i] * Y_gpu[i] + Y_gpu[i + Y_p] * Y_gpu[i + Y_p] + Y_gpu[i + 2 * Y_p] *
+        Y_gpu[i + 2 * Y_p];
 }
 
 double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p, bool in_place,
@@ -182,10 +289,7 @@ double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p, bool in_place,
     double *err = tmp.toGpu(&err_p);
 
     dim3 PBlk, PGrd;
-    PBlk = dim3(32, 1, 1);
-    int xBlocks = (int)std::ceil(((double)p.cols()) / 32);
-    int yBlocks = 1;
-    PGrd = dim3(xBlocks, yBlocks, 1);
+    computeDim(p.cols(), 1, &PBlk, &PGrd);
     compute_err<<<PGrd, PBlk>>>(Y_gpu, p_gpu, sr_gpu, t_gpu, err, Y_p, p_p,
                                 sr_p, t_p, err_p, p.cols());
     cudaDeviceSynchronize();
@@ -230,10 +334,7 @@ GPU::Matrix substract_col_w(const GPU::Matrix &M, const GPU::Matrix &m)
     double *M_gpu = M.toGpu(&M_p);
 
     dim3 PBlk, PGrd;
-    PBlk = dim3(32, 1, 1);
-    int xBlocks = (int)std::ceil(((double)M.cols()) / 32);
-    int yBlocks = 1;
-    PGrd = dim3(xBlocks, yBlocks, 1);
+    computeDim(M.cols(), 1, &PBlk, &PGrd);
     substract_col<<<PGrd, PBlk>>>(M_gpu, m_gpu, M_p, m_p, M.cols());
     cudaDeviceSynchronize();
     cudaFree(m_gpu);
@@ -244,77 +345,55 @@ GPU::Matrix substract_col_w(const GPU::Matrix &M, const GPU::Matrix &m)
     return tmp;
 }
 
-__global__ void y_p_norm(const double *y, const double *p,
-                         double *out_p, double *out_y,
-                         const unsigned int y_p_,
-                         const unsigned int p_p_,
-                         const unsigned int size_arr)
+__global__ void y_p_norm(const double *y_gpu, const double *p_gpu,
+                         double *d_gpu, double *sp_gpu,
+                         size_t y_p,
+                         size_t p_p,
+                         size_t d_p,
+                         size_t sp_p,
+                         const int size)
 {
     unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
 
-    unsigned int y_p = y_p_ / sizeof(double);
-    unsigned int p_p = p_p_ / sizeof(double);
+    if (i >= size)
+        return;
 
-    double col[3];
-    if (i < size_arr)
-    {
-        for (unsigned int j = 0; j < 3; j++)
-            col[j] = y[i + j * y_p];
-        out_y[i] = col[0] * col[0] + col[1] * col[1] + col[2] * col[2];
-    }
-    if (i < size_arr)
-    {
-        for (unsigned int j = 0; j < 3; j++)
-            col[j] = p[i + j * p_p];
-        out_p[i] = col[0] * col[0] + col[1] * col[1] + col[2] * col[2];
-    }
+    y_p = y_p / sizeof(double);
+    p_p = p_p / sizeof(double);
+    d_p = d_p / sizeof(double);
+    sp_p = sp_p / sizeof(double);
+
+    d_gpu[i] = y_gpu[i] * y_gpu[i] + y_gpu[i + y_p] * y_gpu[i + y_p]
+        + y_gpu[i + 2*y_p] * y_gpu[i + 2*y_p];
+    sp_gpu[i] = p_gpu[i] * p_gpu[i] + p_gpu[i + p_p] * p_gpu[i + p_p]
+        + p_gpu[i + 2*p_p] * p_gpu[i + 2*p_p];
 }
 
-unsigned int powerizer(unsigned int x)
+void y_p_norm_w(const GPU::Matrix &y, const GPU::Matrix &p, size_t size_arr,
+                double &d_caps, double &sp)
 {
-    --x;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    return ++x;
-}
-
-void y_p_norm_wrapper(const GPU::Matrix &y, const GPU::Matrix &p, unsigned int size_arr, double &d_caps, double &sp)
-{
-    size_t y_p, p_p;
+    size_t y_p, p_p, out_sp_p, out_d_p;
     double *y_gpu = y.toGpu(&y_p);
     double *p_gpu = p.toGpu(&p_p);
 
-    unsigned int block_sz = ((size_arr) < 512) ? powerizer(size_arr) : 512;
-    unsigned int grid_sz = std::ceil((double)(size_arr) / (double)block_sz);
-    unsigned int smem_sz = sizeof(double) * block_sz;
+    GPU::Matrix out_d{MatrixXd{1, size_arr}};
+    GPU::Matrix out_sp{MatrixXd{1, size_arr}};
 
-    double *out_p;
-    cudaMalloc(&out_p, sizeof(double) * size_arr);
+    double *d_gpu = out_d.toGpu(&out_d_p);
+    double *sp_gpu = out_sp.toGpu(&out_sp_p);
 
-    double *out_y;
-    cudaMalloc(&out_y, sizeof(double) * size_arr);
-
-    y_p_norm<<<grid_sz, block_sz, smem_sz>>>(y_gpu, p_gpu, out_p, out_y, y_p, p_p, size_arr);
+    dim3 PBlk, PGrd;
+    computeDim(size_arr, 1, &PBlk, &PGrd);
+    y_p_norm<<<PGrd, PBlk>>>(y_gpu, p_gpu, d_gpu, sp_gpu, y_p, p_p, out_d_p,
+                             out_sp_p, size_arr);
     cudaFree(p_gpu);
     cudaFree(y_gpu);
 
-    double *r_p;
-    r_p = (double *)malloc(sizeof(double) * size_arr);
-    double *r_y;
-    r_y = (double *)malloc(sizeof(double) * size_arr);
-    cudaMemcpy(r_p, out_p, sizeof(double) * size_arr, cudaMemcpyDeviceToHost);
-    cudaMemcpy(r_y, out_y, sizeof(double) * size_arr, cudaMemcpyDeviceToHost);
-    cudaFree(out_p);
-    cudaFree(out_y);
+    out_d.fromGpu(d_gpu, 1, out_d.cols(), out_d_p);
+    out_sp.fromGpu(sp_gpu, 1, out_sp.cols(), out_sp_p);
+    cudaFree(d_gpu);
+    cudaFree(sp_gpu);
 
-    for (unsigned int i = 0; i < size_arr; i++)
-    {
-        d_caps += r_y[i];
-        sp += r_p[i];
-    }
-    free(r_p);
-    free(r_y);
+    d_caps = out_d.sum();
+    sp = out_sp.sum();
 }
