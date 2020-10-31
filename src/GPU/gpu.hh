@@ -1,7 +1,10 @@
 #pragma once
+#include <cmath>
+#include <iostream>
+#include <exception>
+
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
-#include "compute.hh"
 
 using Eigen::MatrixXd;
 using Eigen::ArrayXd;
@@ -62,6 +65,9 @@ namespace GPU
         const double threshold = 1e-5;
     };
 } // namespace GPU
+
+
+// Compute wrapper functions
 
 void compute_Y_w(const GPU::Matrix &m, const GPU::Matrix &pi, GPU::Matrix &Y);
 double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p, bool in_place,

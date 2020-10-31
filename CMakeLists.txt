@@ -45,7 +45,6 @@ src/load.cc
 
 set(HEADERS_GPU
 src/load.hh
-src/GPU/compute.hh
 src/GPU/gpu.hh
 )
 
@@ -55,7 +54,6 @@ src/GPU/compute.cu
 
 
 set(HEADERS_GPU_CUDA
-src/GPU/compute.hh
 src/GPU/gpu.hh
 )
 

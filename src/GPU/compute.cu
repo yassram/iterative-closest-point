@@ -1,4 +1,8 @@
-#include "compute.hh"
+#include <iostream>
+#include <cstdio>
+#include <cstdlib>
+
+#include "gpu.hh"
 
 #define MAX_THREADS_PER_BLOCK 256
 #define SHARED_THREADS_PER_BLOCK 32
@@ -253,9 +257,12 @@ __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double
     t_p = t_p / sizeof(double);
     err_p = err_p / sizeof(double);
 
-    double px = sr_gpu[0] * p_gpu[i] + sr_gpu[1] * p_gpu[i + p_p] + sr_gpu[2] * p_gpu[i + 2 * p_p];
-    double py = sr_gpu[sr_p] * p_gpu[i] + sr_gpu[1 + sr_p] * p_gpu[i + p_p] + sr_gpu[2 + sr_p] * p_gpu[i + 2 * p_p];
-    double pz = sr_gpu[2 * sr_p] * p_gpu[i] + sr_gpu[1 + 2 * sr_p] * p_gpu[i + p_p] + sr_gpu[2 + 2 * sr_p] * p_gpu[i + 2 * p_p];
+    double px = sr_gpu[0] * p_gpu[i] + sr_gpu[1] * p_gpu[i + p_p] + sr_gpu[2] *
+        p_gpu[i + 2 * p_p];
+    double py = sr_gpu[sr_p] * p_gpu[i] + sr_gpu[1 + sr_p] * p_gpu[i + p_p] +
+        sr_gpu[2 + sr_p] * p_gpu[i + 2 * p_p];
+    double pz = sr_gpu[2 * sr_p] * p_gpu[i] + sr_gpu[1 + 2 * sr_p] *
+        p_gpu[i + p_p] + sr_gpu[2 + 2 * sr_p] * p_gpu[i + 2 * p_p];
 
     p_gpu[i] = px + t_gpu[0];
     p_gpu[i + p_p] = py + t_gpu[t_p];
@@ -264,7 +271,8 @@ __global__ void compute_err(double *Y_gpu, double *p_gpu, double *sr_gpu, double
     Y_gpu[i] = Y_gpu[i] - p_gpu[i];
     Y_gpu[i + Y_p] = Y_gpu[i + Y_p] - p_gpu[i + p_p];
     Y_gpu[i + 2 * Y_p] = Y_gpu[i + 2 * Y_p] - p_gpu[i + 2 * p_p];
-    err[i] = Y_gpu[i] * Y_gpu[i] + Y_gpu[i + Y_p] * Y_gpu[i + Y_p] + Y_gpu[i + 2 * Y_p] * Y_gpu[i + 2 * Y_p];
+    err[i] = Y_gpu[i] * Y_gpu[i] + Y_gpu[i + Y_p] * Y_gpu[i + Y_p] + Y_gpu[i + 2 * Y_p] *
+        Y_gpu[i + 2 * Y_p];
 }
 
 double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p, bool in_place,
