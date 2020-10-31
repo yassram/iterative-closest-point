@@ -9,7 +9,7 @@ GPU::Matrix load_matrix(const char *filename)
     std::cerr << "[load] opening " << filename << std::endl;
     infile.open(filename);
     if (not infile.is_open()) {
-        std::cerr << "[load] " << filename << "could not be opened" << std::endl;
+        std::cerr << "[load] " << filename << " could not be opened" << std::endl;
         exit(2);
     }
     while (getline(infile, line))

@@ -5,12 +5,12 @@ namespace GPU
     void ICP::find_corresponding() {
 
         if (this->p.cols() != this->m.cols()) {
-            std::cerr << "Point sets need to have the same number of points.\n";
+            std::cerr << "[error] Point sets need to have the same number of points.\n";
             return exit(-1);
         }
 
         if (this->p.cols() < 4) {
-            std::cerr << "Need at least 4 point pairs\n";
+            std::cerr << "[error] Need at least 4 point pairs\n";
             exit(-1);
         }
 

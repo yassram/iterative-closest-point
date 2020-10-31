@@ -6,8 +6,6 @@
 #include <Eigen/Core>
 #include <Eigen/Eigenvalues>
 
-#include "compute.hh"
-
 using Eigen::MatrixXd;
 using Eigen::ArrayXd;
 using Eigen::Vector3d;
