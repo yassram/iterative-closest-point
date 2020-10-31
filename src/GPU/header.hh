@@ -1,3 +1,5 @@
 #pragma once
 #include <iostream>
-#include "compute.hh"
+
+#include "../load.hh"
+#include "gpu.hh"

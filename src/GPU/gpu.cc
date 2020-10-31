@@ -1,13 +1,21 @@
 #include "gpu.hh"
-#include <cmath>
-#include <iostream>
 
 namespace GPU
 {
     void ICP::find_corresponding() {
 
+        if (this->p.cols() != this->m.cols()) {
+            std::cerr << "Point sets need to have the same number of points.\n";
+            return exit(-1);
+        }
+
+        if (this->p.cols() < 4) {
+            std::cerr << "Need at least 4 point pairs\n";
+            exit(-1);
+        }
+
         for (int i = 0; i < this->max_iter; i++) {
-            std::cerr << "[ICP] iteration number " << i << " | ";
+            std::cout << "[ICP] iteration number " << i << " | ";
 
             Matrix Y{Matrix::Zero(this->dim, this->np)};
 
@@ -19,7 +27,7 @@ namespace GPU
             err += compute_err_w(Y, this->new_p, true, sr, this->t);
 
             err /= this->np;
-            std::cerr << "err = " << err << std::endl;
+            std::cout << "error value = " << err << std::endl;
 
             if (err < this->threshold)
                 break;
@@ -31,25 +39,14 @@ namespace GPU
     {
         int index = 0;
         double max = real(eigen_value(0));
-        for (int i = 1; i < 4; i++) {
+        for (int i = 1; i < 4; i++)
             if (real(eigen_value(i)) > max)
                 index = i;
-        }
         return index;
     }
 
     double ICP::find_alignment(Matrix y)
     {
-        if (this->p.cols() != this->m.cols()) {
-            std::cerr << "Point sets need to have the same number of points.\n";
-            return -1;
-        }
-
-
-        if (this->p.cols() < 4) {
-            std::cerr << "Need at least 4 point pairs\n";
-            return -1;
-        }
 
         Matrix mu_p{this->new_p.rowwise().mean()};
         Matrix mu_y{y.rowwise().mean()};
