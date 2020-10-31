@@ -108,7 +108,7 @@ namespace GPU
 // Compute wrapper functions
 
 void compute_Y_w_opti(const GPU::Matrix &m, const GPU::Matrix &pi, GPU::Matrix &Y);
-void compute_distance_w_naive(const GPU::Matrix &m, const GPU::Matrix &pi);
+int compute_distance_w_naive(const GPU::Matrix &m, const GPU::Matrix &pi);
 double compute_err_w(const GPU::Matrix &Y, GPU::Matrix &p, bool in_place,
                      const GPU::Matrix &sr, const GPU::Matrix &t);
 

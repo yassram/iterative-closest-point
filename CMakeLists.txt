@@ -79,7 +79,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../)
 
 add_executable(icp ${SRCS} ${HEADERS})
 add_executable(icp-gpu ${SRCS_COMPUTE} ${HEADERS_COMPUTE})
-add_executable(bench src/bench.cc src/load.cc src/cpu.cc src/GPU/gpu.cc src/GPU/compute.cu ${HEADERS_GPU_CUDA} ${HEADERS})
+add_executable(bench src/bench.cc src/load.cc src/cpu.cc src/GPU/compute.cu src/GPU/gpu.cc ${HEADERS_GPU} ${HEADERS})
 
 target_link_libraries(icp Eigen3::Eigen)
 target_link_libraries(icp-gpu compute)

@@ -276,7 +276,7 @@ __global__ void find_min_distance_naive(double *distance, int *minIdx, int size)
             *minIdx = i;
 }
 
-int compute_distance_w_naive(GPU::Matrix m, GPU::Matrix pi){
+int compute_distance_w_naive(const GPU::Matrix &m, const GPU::Matrix &pi){
     size_t m_p, pi_p;
     double *m_gpu = m.toGpu(&m_p);
     double *pi_gpu = pi.toGpu(&pi_p);
